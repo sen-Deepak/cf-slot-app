@@ -35,3 +35,5 @@ const BRANDIP_API = {
         }
     }
 };
+
+export { BRANDIP_API };

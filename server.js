@@ -9,7 +9,6 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
 
 // Load .env.local file
 function loadEnv() {
@@ -60,8 +59,8 @@ const MIME_TYPES = {
 
 // Create server
 const server = http.createServer(async (req, res) => {
-    // Parse URL
-    const parsedUrl = url.parse(req.url, true);
+    // Parse URL using WHATWG API
+    const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     let pathname = parsedUrl.pathname;
 
     console.log(`\n📥 Request: ${req.method} ${pathname}`);
@@ -70,6 +69,11 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-app-key');
+    
+    // Disable caching for dynamic content
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
 
     // Handle OPTIONS
     if (req.method === 'OPTIONS') {
@@ -323,14 +327,14 @@ const server = http.createServer(async (req, res) => {
 
     // Handle root redirect
     if (pathname === '/') {
-        pathname = '/public/login.html';
+        pathname = '/login.html';
     }
 
-    // Serve static files
-    let filePath = path.join(__dirname, pathname);
+    // Serve static files from public directory
+    let filePath = path.join(__dirname, 'public', pathname);
 
     // Prevent directory traversal
-    if (!filePath.startsWith(path.join(__dirname))) {
+    if (!filePath.startsWith(path.join(__dirname, 'public'))) {
         res.writeHead(403, { 'Content-Type': 'text/plain' });
         res.end('Forbidden');
         return;
@@ -356,8 +360,8 @@ const server = http.createServer(async (req, res) => {
 // Start server
 server.listen(PORT, HOST, () => {
     console.log(`\n🚀 CreativeFuel Booking App Server\n`);
-    console.log(`📍 Local:   http://localhost:${PORT}/public/login.html`);
-    console.log(`🌐 Network: http://172.17.1.247:${PORT}/public/login.html`);
+    console.log(`📍 Local:   http://localhost:${PORT}/`);
+    console.log(`🌐 Network: http://172.17.1.247:${PORT}/`);
     console.log(`\n⚙️  Configuration:`);
     console.log(`   N8N Webhook: ${process.env.N8N_WEBHOOK_URL ? '✅ Configured' : '❌ Not configured'}`);
     console.log(`   App Key:     ${process.env.APP_KEY ? '✅ Set' : '⚠️  Not set (optional)'}`);

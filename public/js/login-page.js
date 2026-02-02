@@ -2,6 +2,10 @@
  * login-page.js - Login page logic
  */
 
+import { AUTH_API } from './auth-api.js';
+import { AUTH } from './auth.js';
+import { UI } from './ui.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
@@ -91,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (user) {
                 UI.showToast('Login successful!', 'success', 1500);
                 setTimeout(() => {
-                    window.location.href = '/public/booking.html';
+                    window.location.href = '/booking.html';
                 }, 500);
             } else {
                 UI.showError(loginError, 'Invalid email or password');

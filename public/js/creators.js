@@ -2,6 +2,8 @@
  * creators.js - Load creators list from API
  */
 
+import { CREATORS_API } from './creators-api.js';
+
 window.CF_CREATORS = [];  // Will be populated from API
 
 // Load creators on page load

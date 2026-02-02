@@ -2,6 +2,8 @@
  * auth.js - Authentication management
  */
 
+import { AUTH_API } from './auth-api.js';
+
 const AUTH = {
     /**
      * Login with email and password using API
@@ -70,7 +72,7 @@ const AUTH = {
      */
     requireAuth() {
         if (!this.isAuthenticated()) {
-            window.location.href = '/public/login.html';
+            window.location.href = '/login.html';
             return false;
         }
         return true;
@@ -81,3 +83,5 @@ const AUTH = {
 if (window.location.pathname.includes('booking.html') || window.location.pathname.includes('slot-check.html')) {
     AUTH.requireAuth();
 }
+
+export { AUTH };

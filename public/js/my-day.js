@@ -1,4 +1,6 @@
 import { fetchWithTimeout } from './fetch-util.js';
+import { AUTH } from './auth.js';
+import { UI } from './ui.js';
 
 /**
  * my-day.js - My Day page logic (FINAL)
@@ -28,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function initializePage() {
   document.getElementById("logoutBtn")?.addEventListener("click", () => {
     AUTH.logout();
-    window.location.href = "/public/login.html";
+    window.location.href = "/login.html";
   });
 
   const user = AUTH.getCurrentUser();

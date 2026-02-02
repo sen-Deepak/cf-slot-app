@@ -34,3 +34,5 @@ const CREATORS_API = {
         }
     }
 };
+
+export { CREATORS_API };

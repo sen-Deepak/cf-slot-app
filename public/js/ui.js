@@ -234,3 +234,5 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+export { UI };

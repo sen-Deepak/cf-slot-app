@@ -2,6 +2,11 @@
  * slot-check.js - Slot Check page logic
  */
 
+import { AUTH } from './auth.js';
+import { UI } from './ui.js';
+import { API } from './api.js';
+import './creators.js';  // Load creators list
+
 // State
 let slotCheckState = {
     currentMode: 'time', // 'time' or 'creators'
@@ -45,7 +50,7 @@ function initializePage() {
     // Setup logout button
     document.getElementById('logoutBtn').addEventListener('click', () => {
         AUTH.logout();
-        window.location.href = '/public/login.html';
+        window.location.href = '/login.html';
     });
 }
 

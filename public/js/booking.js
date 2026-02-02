@@ -2,6 +2,11 @@
  * booking.js - Booking page logic
  */
 
+import { AUTH } from './auth.js';
+import { UI } from './ui.js';
+import { BRANDIP_API } from './brandip-api.js';
+import { API } from './api.js';
+
 // State
 let bookingState = {
     selectedDateOffset: null,
@@ -37,7 +42,7 @@ function initializePage() {
     // Setup logout button
     document.getElementById('logoutBtn').addEventListener('click', () => {
         AUTH.logout();
-        window.location.href = '/public/login.html';
+        window.location.href = '/login.html';
     });
 }
 
@@ -547,6 +552,48 @@ function resetLock() {
     UI.showError(document.getElementById('lockError'), '');
 }
 
+function resetBookingForm() {
+    // Reset all form fields
+    document.getElementById('shootName').value = '';
+    document.getElementById('brand').value = '';
+    document.getElementById('ip').value = '';
+    document.getElementById('noOfShoot').value = '';
+    document.getElementById('location').value = '';
+    
+    // Reset date and time selections
+    bookingState.selectedDateOffset = null;
+    bookingState.selectedDateKey = null;
+    bookingState.fromTime = null;
+    bookingState.toTime = null;
+    
+    // Reset lock state
+    resetLock();
+    
+    // Clear error messages
+    UI.showError(document.getElementById('lockError'), '');
+    UI.showError(document.getElementById('submitError'), '');
+    
+    // Reset date button UI
+    document.querySelectorAll('.date-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById('selectedDateDisplay').textContent = '';
+    
+    // Reset time selections
+    document.getElementById('fromTime').value = '';
+    document.getElementById('toTime').value = '';
+    document.getElementById('durationInfo').textContent = '';
+    
+    // Regenerate time options
+    populateTimeSelects(bookingState.allTimes);
+    
+    // Update button states
+    updateLockButtonState();
+    updateSubmitButtonState();
+    
+    console.log('Booking form reset successfully');
+}
+
 function updateSubmitButtonState() {
     const submitBtn = document.getElementById('submitBookingBtn');
     const shootName = document.getElementById('shootName').value.trim();
@@ -576,7 +623,7 @@ document.addEventListener('input', (e) => {
     }
 });
 
-async function handleBookingSubmit() {
+async function submitBooking() {
     if (bookingSubmitInFlight) return; // Prevent duplicate submission
     bookingSubmitInFlight = true;
     const submitBtn = document.getElementById('submitBookingBtn');
