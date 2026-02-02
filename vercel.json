@@ -3,15 +3,9 @@
   "installCommand": "npm install",
   "framework": "vanilla",
   "env": {
-    "N8N_WEBHOOK_URL": {
-      "description": "N8N webhook URL"
-    },
-    "APP_KEY": {
-      "description": "Application key"
-    },
-    "AUTH_API_URL": {
-      "description": "Authentication API URL"
-    }
+    "N8N_WEBHOOK_URL": "@N8N_WEBHOOK_URL",
+    "APP_KEY": "@APP_KEY",
+    "AUTH_API_URL": "@AUTH_API_URL"
   },
   "routes": [
     {
