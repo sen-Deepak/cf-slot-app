@@ -2,7 +2,6 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": "vanilla",
-  "nodeVersion": "18.x",
   "env": [
     "N8N_WEBHOOK_URL",
     "APP_KEY",
