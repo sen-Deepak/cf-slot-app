@@ -1,7 +1,7 @@
 {
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "framework": "vanilla",
+  "framework": null,
   "env": {
     "N8N_WEBHOOK_URL": "@N8N_WEBHOOK_URL",
     "APP_KEY": "@APP_KEY",
