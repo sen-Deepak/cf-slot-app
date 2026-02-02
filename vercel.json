@@ -1,29 +1,25 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
   "outputDirectory": "public",
   "routes": [
+    { "handle": "filesystem" },
+
     {
       "src": "/api/(.*)",
       "dest": "/api/$1.js",
       "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"]
     },
+
     {
-      "src": "/css/(.*)",
-      "dest": "/public/css/$1"
+      "src": "/",
+      "dest": "/login.html"
     },
     {
-      "src": "/js/(.*)",
-      "dest": "/public/js/$1"
-    },
-    {
-      "src": "/(.*\\.html?)$",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/.*",
-      "dest": "/public/login.html"
+      "src": "/(.*)",
+      "dest": "/login.html"
     }
   ]
 }
