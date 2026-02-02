@@ -7,7 +7,6 @@
     "APP_KEY",
     "AUTH_API_URL"
   ],
-  "envPrefix": "",
   "routes": [
     {
       "src": "/api/(.*)",
