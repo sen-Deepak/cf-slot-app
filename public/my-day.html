@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Day - CreativeFuel</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header: top row = logo + logout, bottom row = page tabs -->
+        <header class="header">
+            <div class="header-top-row">
+                <a href="/booking.html" class="header-logo-link">
+                    <img src="https://i.ibb.co/dsM7LWqN/Screenshot-2026-01-30-230759-removebg-preview.png" alt="CreativeFuel" class="header-logo">
+                </a>
+                <button id="logoutBtn" class="btn btn-small btn-secondary">Logout</button>
+            </div>
+            <nav class="tabs">
+                <a href="/booking.html" class="tab">Slot Booking</a>
+                <a href="/slot-check.html" class="tab">Slot Check</a>
+                <a href="/my-day.html" class="tab tab-active">My Day</a>
+            </nav>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- My Bookings Section -->
+            <section class="section">
+                <div class="my-bookings-header">
+                    <h2>My Bookings</h2>
+                    <div id="myBookingsCountBadges" class="booking-count-badges" aria-hidden="true"></div>
+                </div>
+                <div id="myBookingsLoading" class="loading-spinner hidden"></div>
+                <div id="myBookingsError" class="error-message"></div>
+                <div id="myBookingsContainer" class="bookings-container">
+                    <p class="placeholder-text">Loading your bookings...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/users.js"></script>
+    <script src="/js/creators-api.js"></script>
+    <script src="/js/creators.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/my-day.js"></script>
+</body>
+</html>

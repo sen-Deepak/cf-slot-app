@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Check - CreativeFuel</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header: top row = logo + logout, bottom row = page tabs -->
+        <header class="header">
+            <div class="header-top-row">
+                <a href="/booking.html" class="header-logo-link">
+                    <img src="https://i.ibb.co/dsM7LWqN/Screenshot-2026-01-30-230759-removebg-preview.png" alt="CreativeFuel" class="header-logo">
+                </a>
+                <button id="logoutBtn" class="btn btn-small btn-secondary">Logout</button>
+            </div>
+            <nav class="tabs">
+                <a href="/booking.html" class="tab">Slot Booking</a>
+                <a href="/slot-check.html" class="tab tab-active">Slot Check</a>
+                <a href="/my-day.html" class="tab">My Day</a>
+            </nav>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Mode Toggle -->
+            <section class="section">
+                <div class="button-group mode-toggle">
+                    <button class="mode-btn mode-active" data-mode="time">
+                        📅 Time Check
+                    </button>
+                    <button class="mode-btn" data-mode="creators">
+                        👥 Creators Check
+                    </button>
+                </div>
+            </section>
+
+            <!-- Mode A: Time Check -->
+            <section id="timeModeSection" class="section">
+                <h2>Check Slot Availability</h2>
+
+                <!-- Date Toggle -->
+                <div class="date-selector">
+                    <div class="button-group">
+                        <button type="button" class="date-btn time-mode-date" data-offset="0">
+                            Today
+                        </button>
+                        <button type="button" class="date-btn time-mode-date" data-offset="1">
+                            Tomorrow
+                        </button>
+                        <button type="button" class="date-btn time-mode-date" data-offset="2">
+                            Day After
+                        </button>
+                    </div>
+                    <p id="timeModeDateDisplay" class="date-display">Select a date</p>
+                </div>
+
+                <!-- Time Selection -->
+                <div class="time-selection">
+                    <div class="form-group">
+                        <label for="timeModeFromTime">From Time</label>
+                        <select id="timeModeFromTime" class="time-select">
+                            <option value="">Select start time</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeModeToTime">To Time</label>
+                        <select id="timeModeToTime" class="time-select">
+                            <option value="">Select end time</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button id="timeCheckBtn" class="btn btn-primary btn-lg" disabled>
+                    Check Availability
+                </button>
+
+                <div id="timeModeError" class="error-message"></div>
+                <div id="timeModeLoading" class="loading-spinner hidden"></div>
+                <div id="timeModeResult" class="result-box hidden"></div>
+            </section>
+
+            <!-- Mode B: Creators Check -->
+            <section id="creatorsModeSection" class="section hidden">
+                <h2>Check Creators Availability</h2>
+
+                <!-- Date Toggle -->
+                <div class="date-selector">
+                    <div class="button-group">
+                        <button type="button" class="date-btn creators-mode-date" data-offset="0">
+                            Today
+                        </button>
+                        <button type="button" class="date-btn creators-mode-date" data-offset="1">
+                            Tomorrow
+                        </button>
+                        <button type="button" class="date-btn creators-mode-date" data-offset="2">
+                            Day After
+                        </button>
+                    </div>
+                    <p id="creatorModeDateDisplay" class="date-display">Select a date</p>
+                </div>
+
+                <!-- Creators Checkboxes -->
+                <div id="creatorCheckboxes" class="checkbox-group">
+                    <!-- Populated from creators.js -->
+                </div>
+
+                <!-- Submit Button -->
+                <button id="creatorsCheckBtn" class="btn btn-primary btn-lg" disabled>
+                    Check Creators
+                </button>
+
+                <div id="creatorsModeError" class="error-message"></div>
+                <div id="creatorsModeLoading" class="loading-spinner hidden"></div>
+                <div id="creatorsModeResult" class="result-box hidden"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/users.js"></script>
+    <script src="/js/creators-api.js"></script>
+    <script src="/js/creators.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/slot-check.js"></script>
+</body>
+</html>

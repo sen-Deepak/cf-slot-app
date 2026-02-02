@@ -1,0 +1,18 @@
+{
+  "name": "cf-slot-app",
+  "version": "1.0.0",
+  "description": "CreativeFuel Creators Booking System - Mobile-first web app",
+  "private": true,
+  "scripts": {
+    "dev": "node server.js",
+    "build": "echo 'No build step required - vanilla JS'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "booking",
+    "creators",
+    "scheduling"
+  ],
+  "author": "CreativeFuel",
+  "license": "MIT"
+}

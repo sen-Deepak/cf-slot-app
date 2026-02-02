@@ -1,0 +1,33 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "python -m http.server 3000 --directory .",
+  "installCommand": "npm install",
+  "framework": "vanilla",
+  "nodeVersion": "18.x",
+  "env": [
+    "N8N_WEBHOOK_URL",
+    "APP_KEY"
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1.js"
+    {
+      "src": "/(.*\.html)",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/public/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/public/js/$1"
+    }
+    }
+  ]
+}

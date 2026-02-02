@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Booking - CreativeFuel</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header: top row = logo + logout, bottom row = page tabs -->
+        <header class="header">
+            <div class="header-top-row">
+                <a href="/booking.html" class="header-logo-link">
+                    <img src="https://i.ibb.co/dsM7LWqN/Screenshot-2026-01-30-230759-removebg-preview.png" alt="CreativeFuel" class="header-logo">
+                </a>
+                <button id="logoutBtn" class="btn btn-small btn-secondary">Logout</button>
+            </div>
+            <nav class="tabs">
+                <a href="/booking.html" class="tab tab-active">Slot Booking</a>
+                <a href="/slot-check.html" class="tab">Slot Check</a>
+                <a href="/my-day.html" class="tab">My Day</a>
+            </nav>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Date & Time Selection (compact) -->
+            <section class="section section--compact">
+                <h2>Select Date & Time</h2>
+
+                <!-- Date: Today | Tomorrow | Day After (horizontal, compact) -->
+                <div class="date-selector">
+                    <div class="button-group date-button-group">
+                        <button type="button" class="date-btn" data-offset="0">Today</button>
+                        <button type="button" class="date-btn" data-offset="1">Tomorrow</button>
+                        <button type="button" class="date-btn" data-offset="2">Day After</button>
+                    </div>
+                </div>
+
+                <!-- From Time | To Time (side by side) -->
+                <div class="time-selection">
+                    <div class="form-group form-group--inline">
+                        <label for="fromTime">From</label>
+                        <select id="fromTime" class="time-select">
+                            <option value="">Start</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group--inline">
+                        <label for="toTime">To</label>
+                        <select id="toTime" class="time-select">
+                            <option value="">End</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Date + Duration summary (one compact line) -->
+                <div class="date-duration-row">
+                    <span id="selectedDateDisplay" class="date-display">Select a date</span>
+                    <span id="durationInfo" class="duration-info"></span>
+                </div>
+
+                <!-- Lock Button -->
+                <button id="lockBtn" class="btn btn-primary btn-lg" disabled>
+                    🔒 Lock Date & Time
+                </button>
+                <div id="lockError" class="error-message"></div>
+                <div id="lockLoading" class="loading-spinner hidden"></div>
+            </section>
+
+            <!-- Booking Details (hidden until lock success) -->
+            <section id="bookingDetailsSection" class="section">
+                <h2>Booking Details</h2>
+
+                <div class="form-group">
+                    <label for="shootName">Shoot Name *</label>
+                    <input 
+                        type="text" 
+                        id="shootName" 
+                        placeholder="e.g., Summer Campaign 2026"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <!-- Brand vs IP Toggle -->
+                <div class="form-group">
+                    <label>Brand or IP *</label>
+                    <div class="toggle-buttons">
+                        <button type="button" class="toggle-btn active" data-option="brand">
+                            Brand
+                        </button>
+                        <button type="button" class="toggle-btn" data-option="ip">
+                            IP
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="brandGroup">
+                    <label for="brand">Brand *</label>
+                    <select id="brand" disabled>
+                        <option value="">Loading brands...</option>
+                    </select>
+                </div>
+
+                <div class="form-group hidden" id="ipGroup">
+                    <label for="ip">IP *</label>
+                    <select id="ip" disabled>
+                        <option value="">Loading IPs...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="noOfShoot">Number of Shoots *</label>
+                    <select id="noOfShoot">
+                        <option value="">Select number</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location *</label>
+                    <select id="location">
+                        <option value="">Select location type</option>
+                        <option value="Indoor">Indoor</option>
+                        <option value="Outdoor">Outdoor</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- DOP Selection (visible, empty until lock success) -->
+            <section id="dopSection" class="section">
+                <h2>Select DOP</h2>
+                <div id="dopCheckboxes" class="checkbox-group">
+                    <!-- Populated after lock success -->
+                </div>
+            </section>
+
+            <!-- Cast Selection (visible, empty until lock success) -->
+            <section id="castSection" class="section">
+                <h2>Select Cast</h2>
+                <div id="castCheckboxes" class="checkbox-group">
+                    <!-- Populated after lock success -->
+                </div>
+            </section>
+
+            <!-- Submit Button (hidden until lock success) -->
+            <section id="submitSection" class="section hidden">
+                <button id="submitBookingBtn" class="btn btn-primary btn-lg">
+                    ✅ Submit Booking
+                </button>
+                <div id="submitError" class="error-message"></div>
+                <div id="submitLoading" class="loading-spinner hidden"></div>
+            </section>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message hidden">
+                <p>✅ Booking successfully done!</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/users.js"></script>
+    <script src="/js/creators-api.js"></script>
+    <script src="/js/creators.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/ui.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/brandip-api.js"></script>
+    <script src="/js/booking.js"></script>
+</body>
+</html>

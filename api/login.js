@@ -1,0 +1,45 @@
+// api/login.js - Vercel serverless function for login
+
+export default async function handler(req, res) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ ok: false, message: 'Method not allowed. Use POST.' });
+    }
+
+    let body = '';
+    try {
+        body = req.body;
+        if (typeof body === 'string') {
+            body = JSON.parse(body);
+        }
+    } catch (e) {
+        return res.status(400).json({ ok: false, message: 'Invalid JSON' });
+    }
+
+    const email = body.email?.trim().toLowerCase();
+    const password = body.password;
+    if (!email || !password) {
+        return res.status(400).json({ ok: false, message: 'Missing email or password' });
+    }
+
+    // Use AUTH_API_URL from env
+    const AUTH_API_URL = process.env.AUTH_API_URL;
+    if (!AUTH_API_URL) {
+        return res.status(500).json({ ok: false, message: 'Server misconfigured: AUTH_API_URL missing' });
+    }
+
+    try {
+        const response = await fetch(AUTH_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+        // Always return { ok, user, message } or { ok: false, message }
+        if (!response.ok) {
+            return res.status(response.status).json({ ok: false, message: data.message || 'Auth failed' });
+        }
+        return res.status(200).json(data);
+    } catch (error) {
+        return res.status(500).json({ ok: false, message: error.message || 'Auth request failed' });
+    }
+}
