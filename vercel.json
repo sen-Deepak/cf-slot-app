@@ -1,24 +1,19 @@
 {
   "buildCommand": "npm run build",
-  "devCommand": "python -m http.server 3000 --directory .",
   "installCommand": "npm install",
   "framework": "vanilla",
   "nodeVersion": "18.x",
   "env": [
     "N8N_WEBHOOK_URL",
-    "APP_KEY"
+    "APP_KEY",
+    "AUTH_API_URL"
   ],
+  "envPrefix": "",
   "routes": [
     {
-      "src": "/",
-      "dest": "/login.html"
-    },
-    {
       "src": "/api/(.*)",
-      "dest": "/api/$1.js"
-    {
-      "src": "/(.*\.html)",
-      "dest": "/public/$1"
+      "dest": "/api/$1.js",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"]
     },
     {
       "src": "/css/(.*)",
@@ -27,7 +22,14 @@
     {
       "src": "/js/(.*)",
       "dest": "/public/js/$1"
-    }
+    },
+    {
+      "src": "/(.*\\.html?)$",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/.*",
+      "dest": "/public/login.html"
     }
   ]
 }
