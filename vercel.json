@@ -2,11 +2,7 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": null,
-  "env": {
-    "N8N_WEBHOOK_URL": "@N8N_WEBHOOK_URL",
-    "APP_KEY": "@APP_KEY",
-    "AUTH_API_URL": "@AUTH_API_URL"
-  },
+  
   "routes": [
     {
       "src": "/api/(.*)",
