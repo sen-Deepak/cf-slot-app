@@ -2,7 +2,7 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": null,
-  
+  "outputDirectory": "public",
   "routes": [
     {
       "src": "/api/(.*)",
