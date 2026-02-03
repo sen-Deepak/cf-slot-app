@@ -58,7 +58,7 @@ export default async function handler(req, res) {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(req.body),
-                timeout: 30000 // 30 second timeout
+                timeout: 60000 // 30 second timeout
             });
             const duration = Date.now() - startTime;
             // Get response body
