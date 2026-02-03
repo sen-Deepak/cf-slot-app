@@ -176,19 +176,28 @@ const server = http.createServer(async (req, res) => {
                 }
 
                 const email = payload.email?.trim().toLowerCase();
-                const password = payload.password;
+                const passwordHash = payload.password_hash;
 
-                if (!email || !password) {
+                console.log(`\n🔐 Login Request Received`);
+                console.log(`   Payload:`, JSON.stringify(payload));
+                console.log(`   Email: ${email}`);
+                console.log(`   Password Hash Type: ${typeof passwordHash}`);
+                console.log(`   Password Hash Exists: ${!!passwordHash}`);
+
+                if (!email || !passwordHash) {
+                    console.log(`   ❌ Validation Failed`);
+                    if (!email) console.log(`      - Missing or empty email`);
+                    if (!passwordHash) console.log(`      - Missing or empty password_hash`);
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
                         ok: false,
-                        message: 'Missing email or password'
+                        message: 'Missing email or password hash'
                     }));
                     return;
                 }
 
-                console.log(`\n🔐 Login Request`);
-                console.log(`   Email: ${email}`);
+                console.log(`   ✅ Validation Passed`);
+                console.log(`   Password Hash: ${passwordHash.substring(0, 16)}...`);
 
                 // Call Google Apps Script to validate credentials
                 const GAS_AUTH_URL = "https://script.google.com/macros/s/AKfycbzhbtv2uI7eIJEUhzwnqaRK6d6AqAKHyOyEIPHZgtz-PTVyJmgWzxRyp6eEuhh3WkXNUA/exec";
@@ -201,7 +210,7 @@ const server = http.createServer(async (req, res) => {
                         },
                         body: JSON.stringify({
                             email: email,
-                            password: password
+                            password_hash: passwordHash
                         })
                     });
 

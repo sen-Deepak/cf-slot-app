@@ -16,9 +16,9 @@ export default async function handler(req, res) {
     }
 
     const email = body.email?.trim().toLowerCase();
-    const password = body.password;
-    if (!email || !password) {
-        return res.status(400).json({ ok: false, message: 'Missing email or password' });
+    const passwordHash = body.password_hash;
+    if (!email || !passwordHash) {
+        return res.status(400).json({ ok: false, message: 'Missing email or password hash' });
     }
 
     // Use AUTH_API_URL from env
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         const response = await fetch(AUTH_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password_hash: passwordHash })
         });
         const data = await response.json();
         // Always return { ok, user, message } or { ok: false, message }
