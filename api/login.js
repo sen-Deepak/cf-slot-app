@@ -1,5 +1,12 @@
 // api/login.js - Vercel serverless function for login
 
+import crypto from 'crypto';
+
+// Hash password using SHA-256
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ ok: false, message: 'Method not allowed. Use POST.' });
@@ -16,10 +23,13 @@ export default async function handler(req, res) {
     }
 
     const email = body.email?.trim().toLowerCase();
-    const passwordHash = body.password_hash;
-    if (!email || !passwordHash) {
-        return res.status(400).json({ ok: false, message: 'Missing email or password hash' });
+    const password = body.password;
+    if (!email || !password) {
+        return res.status(400).json({ ok: false, message: 'Missing email or password' });
     }
+
+    // Hash password on server side
+    const passwordHash = hashPassword(password);
 
     // Use AUTH_API_URL from env
     const AUTH_API_URL = process.env.AUTH_API_URL;

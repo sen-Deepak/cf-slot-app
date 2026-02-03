@@ -9,6 +9,12 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+
+// Hash password using SHA-256
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 // Load .env.local file
 function loadEnv() {
@@ -176,28 +182,30 @@ const server = http.createServer(async (req, res) => {
                 }
 
                 const email = payload.email?.trim().toLowerCase();
-                const passwordHash = payload.password_hash;
+                const password = payload.password;
 
                 console.log(`\n🔐 Login Request Received`);
-                console.log(`   Payload:`, JSON.stringify(payload));
+                console.log(`   Payload:`, JSON.stringify({ email, password: '***' }));
                 console.log(`   Email: ${email}`);
-                console.log(`   Password Hash Type: ${typeof passwordHash}`);
-                console.log(`   Password Hash Exists: ${!!passwordHash}`);
+                console.log(`   Password Exists: ${!!password}`);
 
-                if (!email || !passwordHash) {
+                if (!email || !password) {
                     console.log(`   ❌ Validation Failed`);
                     if (!email) console.log(`      - Missing or empty email`);
-                    if (!passwordHash) console.log(`      - Missing or empty password_hash`);
+                    if (!password) console.log(`      - Missing or empty password`);
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({
                         ok: false,
-                        message: 'Missing email or password hash'
+                        message: 'Missing email or password'
                     }));
                     return;
                 }
 
-                console.log(`   ✅ Validation Passed`);
-                console.log(`   Password Hash: ${passwordHash.substring(0, 16)}...`);
+                // Hash password using SHA-256 on server side
+                console.log(`   🔐 Hashing password on server...`);
+                const passwordHash = hashPassword(password);
+                console.log(`   ✅ Password hashed`);
+                console.log(`   Hash: ${passwordHash.substring(0, 16)}...`);
 
                 // Call Google Apps Script to validate credentials
                 const GAS_AUTH_URL = "https://script.google.com/macros/s/AKfycbzhbtv2uI7eIJEUhzwnqaRK6d6AqAKHyOyEIPHZgtz-PTVyJmgWzxRyp6eEuhh3WkXNUA/exec";
