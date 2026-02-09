@@ -248,7 +248,9 @@ function displayUserBookings(bookings, container) {
             <div class="booking-detail-row">
               <span class="detail-label">Date:</span>
               <span class="detail-value">${escapeHtml(String(date))}</span>
-              <span class="time-separator">|</span>
+            </div>
+
+            <div class="booking-detail-row">
               <span class="detail-label">Time:</span>
               <span class="detail-value">${escapeHtml(fromTime)} - ${escapeHtml(toTime)}</span>
             </div>
@@ -261,7 +263,9 @@ function displayUserBookings(bookings, container) {
             <div class="booking-detail-row">
               <span class="detail-label">Shoot Lead:</span>
               <span class="detail-value">${escapeHtml(String(shootLead))}</span>
-              <span class="time-separator">|</span>
+            </div>
+
+            <div class="booking-detail-row">
               <span class="detail-label">Location:</span>
               <span class="detail-value">${escapeHtml(String(location))}</span>
             </div>

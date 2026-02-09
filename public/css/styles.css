@@ -824,16 +824,18 @@ input::placeholder {
 
 .time-selection {
     display: flex;
+    flex-direction: row;
     gap: var(--spacing-md);
-    align-items: flex-end;
+    margin-bottom: var(--spacing-md);
 }
 
-.time-selection .form-group--inline {
+.time-selection .form-group {
     flex: 1;
     margin-bottom: 0;
 }
 
-.time-selection .form-group--inline label {
+.time-selection .form-group label {
+    display: block;
     font-size: 0.9375rem;
     font-weight: 600;
     margin-bottom: var(--spacing-sm);
@@ -1534,9 +1536,8 @@ input::placeholder {
 .booking-detail-row {
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 8px;
+    gap: 8px;
+    margin-bottom: 12px;
     font-size: 14px;
 }
 
@@ -1547,13 +1548,10 @@ input::placeholder {
 .detail-label {
     font-weight: 600;
     color: #424242;
-    min-width: 100px;
 }
 
 .detail-value {
     color: #666;
-    flex: 1;
-    min-width: 120px;
 }
 
 .time-separator {

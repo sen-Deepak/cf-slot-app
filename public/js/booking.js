@@ -25,6 +25,7 @@ let bookingState = {
 };
 
 let bookingSubmitInFlight = false;
+let employeeSelectionTimeout = null;  // Track timeout for employee selection 90-second timer
 
 document.addEventListener('DOMContentLoaded', () => {
     // Check auth first
@@ -355,6 +356,23 @@ async function lockDateAndTime() {
 
         console.log('Lock response:', response);
 
+        // Check if response is "Ongoing Booking" (someone is currently booking)
+        // Response format: {"key":"Ongoing Booking"}
+        if (response?.key === "Ongoing Booking") {
+            const msg = 'someone else is booking try after 90 sec';
+            UI.showError(lockError, msg);
+            lockError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            // Auto-refresh after 90 seconds
+            setTimeout(() => {
+                window.location.reload();
+            }, 90000);
+            
+            UI.setLoading(lockLoading, false);
+            lockBtn.disabled = false;
+            return;
+        }
+
         // Get name list from webhook: { "name": ["Anusha Koshta - Creator", ...] } or [{ "name": [...] }]
         let namesArray = null;
         if (response && response.name && Array.isArray(response.name)) {
@@ -375,7 +393,7 @@ async function lockDateAndTime() {
                 sLower.startsWith(currentNameLower + ' ');
         });
 
-        // If user is NOT in the list → show popup and block
+        // If user is NOT in the list → show error and block
         if (namesArray.length > 0 && !isInList) {
             const msg = 'Your Already Booked for this slot.';
             if (lockError) {
@@ -408,6 +426,15 @@ async function lockDateAndTime() {
         renderDopCheckboxes();
         renderCastCheckboxes();
         document.getElementById('submitSection').classList.remove('hidden');
+
+        // Start 90-second timer - if user doesn't submit within 90 seconds, refresh page
+        if (employeeSelectionTimeout) {
+            clearTimeout(employeeSelectionTimeout);
+        }
+        employeeSelectionTimeout = setTimeout(() => {
+            console.log('90 seconds passed without booking submission - refreshing page');
+            window.location.reload();
+        }, 90000);
 
         UI.showToast('Date & Time locked successfully!', 'success', 2000);
 
@@ -544,6 +571,12 @@ function resetLock() {
     bookingState.selectedDops = new Set();
     bookingState.selectedCast = new Set();
 
+    // Clear the 90-second timeout
+    if (employeeSelectionTimeout) {
+        clearTimeout(employeeSelectionTimeout);
+        employeeSelectionTimeout = null;
+    }
+
     // Keep form visible but clear DOP and cast checkboxes and submit button
     document.getElementById('dopCheckboxes').innerHTML = '';
     document.getElementById('castCheckboxes').innerHTML = '';
@@ -679,6 +712,12 @@ async function submitBooking() {
 
         // Call API
         await API.postToN8n(payload);
+
+        // Clear the 90-second timeout since booking was submitted successfully
+        if (employeeSelectionTimeout) {
+            clearTimeout(employeeSelectionTimeout);
+            employeeSelectionTimeout = null;
+        }
 
         // Success
         successMessage.classList.add('show');
