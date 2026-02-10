@@ -45,6 +45,16 @@ function initializePage() {
         AUTH.logout();
         window.location.href = '/login.html';
     });
+
+    // Display username in header
+    const user = AUTH.getCurrentUser();
+    if (user && user.name) {
+        const firstName = user.name.split(' ')[0];
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        if (userNameDisplay) {
+            userNameDisplay.textContent = "hii "+ firstName;
+        }
+    }
 }
 
 function generateTimeOptions() {

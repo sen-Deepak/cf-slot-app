@@ -35,6 +35,15 @@ function initializePage() {
 
   const user = AUTH.getCurrentUser();
 
+  // Display username in header
+  if (user && user.name) {
+    const firstName = user.name.split(' ')[0];
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    if (userNameDisplay) {
+      userNameDisplay.textContent = "hii "+firstName;
+    }
+  }
+
   const role =
     user?.role ||
     user?.designation ||
