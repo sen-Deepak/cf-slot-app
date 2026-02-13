@@ -49,7 +49,7 @@ loadEnv();
 
 // ...existing code...
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const HOST = '0.0.0.0';
 
 const MIME_TYPES = {
@@ -339,6 +339,164 @@ const server = http.createServer(async (req, res) => {
                 }));
             }
         });
+        return;
+    }
+
+    // Handle /api/attendance GET and POST requests
+    if (pathname === '/api/attendance') {
+        // CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+        // Handle OPTIONS
+        if (req.method === 'OPTIONS') {
+            res.writeHead(200);
+            res.end();
+            return;
+        }
+
+        if (req.method === 'GET') {
+            // Handle read requests
+            const queryParams = new URL(`http://localhost${req.url}`).searchParams;
+            const employee = queryParams.get('employee');
+            const action = queryParams.get('action');
+
+            if (!employee) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    ok: false,
+                    message: 'Missing employee parameter'
+                }));
+                return;
+            }
+
+            try {
+                const GAS_URL = "https://script.google.com/macros/s/AKfycbyk5av7geQPS1YzxMo1sc2ccNPP-S55kHGJIXy_ijxisSXEgcfZqBlFXv-aAVCF7NzsuQ/exec";
+                const gasUrl = `${GAS_URL}?action=read&employee=${encodeURIComponent(employee)}`;
+                
+                console.log(`   Calling Google Apps Script...`);
+
+                const fetch_response = await fetch(gasUrl, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                const responseText = await fetch_response.text();
+                console.log(`   Status: ${fetch_response.status}`);
+
+                let responseData;
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (e) {
+                    console.warn('   Response is not JSON');
+                    responseData = {};
+                }
+
+                res.writeHead(fetch_response.status, { 
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                });
+                res.end(JSON.stringify(responseData));
+
+            } catch (error) {
+                console.error(`   ❌ Error: ${error.message}`);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    ok: false,
+                    message: `Failed to reach Google Apps Script: ${error.message}`
+                }));
+            }
+            return;
+        }
+
+        if (req.method === 'POST') {
+            // Handle write requests
+            let body = '';
+            req.on('data', chunk => {
+                body += chunk.toString();
+            });
+
+            req.on('end', async () => {
+                try {
+                    // Parse request body
+                    let payload;
+                    try {
+                        payload = JSON.parse(body);
+                    } catch (e) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            ok: false,
+                            message: 'Invalid JSON'
+                        }));
+                        return;
+                    }
+
+                    const { action, date, employee, attendance, key } = payload;
+
+                    if (!action || action !== 'write' || !date || !employee || !attendance) {
+                        res.writeHead(400, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            ok: false,
+                            message: 'Missing required fields: action, date, employee, attendance'
+                        }));
+                        return;
+                    }
+
+                    // Forward to Google Apps Script
+                    const GAS_URL = "https://script.google.com/macros/s/AKfycbyk5av7geQPS1YzxMo1sc2ccNPP-S55kHGJIXy_ijxisSXEgcfZqBlFXv-aAVCF7NzsuQ/exec";
+                    
+                    console.log(`   Calling Google Apps Script...`);
+
+                    const fetch_response = await fetch(GAS_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            action: 'write',
+                            date,
+                            employee,
+                            attendance,
+                            key: key || `${date}${employee}`
+                        })
+                    });
+
+                    const responseText = await fetch_response.text();
+                    console.log(`   Status: ${fetch_response.status}`);
+
+                    let responseData;
+                    try {
+                        responseData = JSON.parse(responseText);
+                    } catch (e) {
+                        console.warn('   Response is not JSON');
+                        responseData = { ok: fetch_response.ok, message: responseText };
+                    }
+
+                    res.writeHead(fetch_response.status, { 
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    });
+                    res.end(JSON.stringify(responseData));
+
+                } catch (error) {
+                    console.error(`   ❌ Error: ${error.message}`);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        ok: false,
+                        message: `Failed to reach Google Apps Script: ${error.message}`
+                    }));
+                }
+            });
+            return;
+        }
+
+        // Method not allowed
+        res.writeHead(405, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            ok: false,
+            message: 'Method not allowed. Use GET or POST.'
+        }));
         return;
     }
 

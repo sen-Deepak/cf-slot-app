@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Day - CreativeFuel</title>
+    <title>Attendance - CreativeFuel</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -21,30 +21,29 @@
                 <div class="tabs">
                     <a href="/booking.html" class="tab">Slot Booking</a>
                     <a href="/slot-check.html" class="tab">Slot Check</a>
-                    <a href="/my-day.html" class="tab tab-active">My Day</a>
-                    <a href="/attendance.html" class="tab">Attendance</a>
+                    <a href="/my-day.html" class="tab">My Day</a>
+                    <a href="/attendance.html" class="tab tab-active">Attendance</a>
                 </div>
             </nav>
         </header>
 
         <!-- Main content -->
         <main class="main-content">
-            <!-- My Bookings Section -->
+            <!-- Attendance Section -->
             <section class="section">
-                <div class="my-bookings-header">
-                    <h2>My Bookings</h2>
-                    <div id="myBookingsCountBadges" class="booking-count-badges" aria-hidden="true"></div>
+                <h2>Attendance</h2>
+                <p class="section-subtitle">Mark your attendance for the next 7 days</p>
+                
+                <div id="attendanceCardsContainer" class="attendance-cards-container">
+                    <!-- Cards will be generated here -->
                 </div>
-                <div id="myBookingsLoading" class="loading-spinner hidden"></div>
-                <div id="myBookingsError" class="error-message"></div>
-                <div id="myBookingsContainer" class="bookings-container">
-                    <p class="placeholder-text">Loading your bookings...</p>
-                </div>
+
+                <div id="attendanceError" class="error-message"></div>
             </section>
         </main>
     </div>
 
     <!-- Scripts -->
-    <script type="module" src="/js/my-day.js?v=2"></script>
+    <script type="module" src="/js/attendance.js?v=1"></script>
 </body>
 </html>

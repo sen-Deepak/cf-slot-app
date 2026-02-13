@@ -155,13 +155,34 @@ body:has(.login-page) {
     text-overflow: ellipsis;
 }
 
-.tabs {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--spacing-md);
-    margin: 0;
+/* Horizontally scrollable tabs container */
+.tabs-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
     padding: var(--spacing-sm) 0 0;
     border-top: 1px solid var(--color-border);
+    margin: 0;
+}
+
+/* Hide scrollbar for all browsers */
+.tabs-container::-webkit-scrollbar {
+    display: none;
+}
+.tabs-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.tabs {
+    display: flex;
+    gap: var(--spacing-md);
+    margin: 0;
+    padding: var(--spacing-sm) 0;
+    flex-wrap: nowrap;
+    width: fit-content;
+    min-width: 100%;
 }
 
 .tab {
@@ -173,6 +194,8 @@ body:has(.login-page) {
     font-weight: 500;
     transition: var(--transition);
     cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .tab:hover {
@@ -1171,6 +1194,203 @@ input::placeholder {
         opacity: 1;
     }
 }
+
+/* ========================================
+   ATTENDANCE PAGE STYLES
+   ======================================== */
+
+.section-subtitle {
+    margin: -1rem 0 1.5rem 0;
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+}
+
+.attendance-cards-container {
+    margin-bottom: var(--spacing-xl);
+}
+
+.attendance-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-lg);
+    background-color: white;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.attendance-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+}
+
+.attendance-card--readonly {
+    background-color: #f9f9f9;
+    opacity: 0.85;
+    border-color: var(--color-success);
+}
+
+.attendance-card--readonly:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: var(--color-success);
+}
+
+.attendance-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.attendance-date-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    min-width: 100px;
+}
+
+.attendance-date {
+    display: inline-block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+.attendance-day {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+}
+
+.attendance-day--sunday {
+    font-weight: 700;
+    color: var(--color-danger);
+}
+
+.attendance-dropdown {
+    flex: 1;
+    min-width: 180px;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    transition: var(--transition);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2313678A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 1.125rem;
+    padding-right: 2.5rem;
+}
+
+.attendance-dropdown:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(19, 103, 138, 0.15);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230a5169' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+.attendance-dropdown:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+}
+
+.attendance-dropdown option {
+    padding: var(--spacing-sm);
+    color: var(--color-text);
+    background-color: white;
+}
+
+.attendance-card-badge {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: rgba(34, 197, 94, 0.1);
+    color: var(--color-success);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.attendance-submit-btn {
+    padding: var(--spacing-md) var(--spacing-lg);
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-bottom: var(--spacing-md);
+}
+
+.attendance-submit-btn:hover:not(:disabled) {
+    background-color: var(--color-primary-dark);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.attendance-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.attendance-card-message {
+    display: none;
+    margin: 0;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.attendance-card-message.show {
+    display: block;
+}
+
+.attendance-card-message.success {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.attendance-card-message.error {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.success-badge,
+.error-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+.success-badge {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: var(--color-success);
+}
+
+.error-badge {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: var(--color-danger);
+}
+
 
 /* ========================================
    RESPONSIVE DESIGN
