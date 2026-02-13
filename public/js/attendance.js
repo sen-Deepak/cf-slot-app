@@ -10,12 +10,12 @@ import { UI } from './ui.js';
 const API_URL = "/api/attendance";
 
 const ATTENDANCE_OPTIONS = [
-  { value: 'present', label: 'Present' },
-  { value: 'absent', label: 'Absent' },
-  { value: 'first-half-leave', label: 'First Half-Day Leave' },
-  { value: 'second-half-leave', label: 'Second Half-Day Leave' },
-  { value: 'partial-late', label: 'Partial Day – Late Arrival' },
-  { value: 'partial-early', label: 'Partial Day – Leave Early' },
+  { value: 'Present', label: 'Present' },
+  { value: 'Absent', label: 'Absent' },
+  { value: 'First-Half-Leave', label: 'First Half-Day Leave' },
+  { value: 'Second-Half-Leave', label: 'Second Half-Day Leave' },
+  { value: 'Partial-Late', label: 'Partial Day – Late Arrival' },
+  { value: 'Partial-Early', label: 'Partial Day – Leave Early' },
 ];
 
 let attendanceState = {
@@ -368,19 +368,19 @@ function normalizeAttendanceStatus(apiStatus) {
   if (!apiStatus) return '';
   
   const statusMap = {
-    'present': 'present',
-    'Present': 'present',
-    'absent': 'absent',
-    'Absent': 'absent',
-    'first-half-leave': 'first-half-leave',
-    'First Half-Day Leave': 'first-half-leave',
-    'second-half-leave': 'second-half-leave',
-    'Second Half-Day Leave': 'second-half-leave',
-    'partial-late': 'partial-late',
-    'Partial Day – Late Arrival': 'partial-late',
-    'partial-early': 'partial-early',
-    'Partial Day – Leave Early': 'partial-early',
+    'present': 'Present',
+    'Present': 'Present',
+    'absent': 'Absent',
+    'Absent': 'Absent',
+    'first-half-leave': 'First-Half-Leave',
+    'First Half-Day Leave': 'First-Half-Leave',
+    'second-half-leave': 'Second-Half-Leave',
+    'Second Half-Day Leave': 'Second-Half-Leave',
+    'partial-late': 'Partial-Late',
+    'Partial Day – Late Arrival': 'Partial-Late',
+    'partial-early': 'Partial-Early',
+    'Partial Day – Leave Early': 'Partial-Early',
   };
   
-  return statusMap[apiStatus] || apiStatus.toLowerCase();
+  return statusMap[apiStatus] || apiStatus;
 }
