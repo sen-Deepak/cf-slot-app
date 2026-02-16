@@ -1,6 +1,7 @@
 import { fetchWithTimeout } from './fetch-util.js';
 import { AUTH } from './auth.js';
 import { UI } from './ui.js';
+import { API } from './api.js';
 
 /**
  * my-day.js - My Day page logic (FINAL)
@@ -216,6 +217,10 @@ function displayUserBookings(bookings, container) {
       return;
     }
 
+    // Get current user for authorization check
+    const currentUser = AUTH.getCurrentUser();
+    const currentUserName = currentUser?.name || currentUser?.Name || "";
+
     let html = '<div class="bookings-list">';
 
     bookings.forEach((booking, idx) => {
@@ -244,6 +249,34 @@ function displayUserBookings(bookings, container) {
 
       const cardClass = "booking-card user-booking-card" + (isTomorrow ? " user-booking-card--tomorrow" : "");
 
+      // Check if current user is the shoot lead (creator)
+      const isShootLead = currentUserName && shootLead && 
+                          String(currentUserName).trim().toLowerCase() === String(shootLead).trim().toLowerCase();
+
+      // Create booking data JSON string for delete button
+      const bookingData = {
+        bookingId: booking["Booking ID"] ?? booking["ID"] ?? "-",
+        shootName: shootName,
+        type: bookingType,
+        bIpName: bIpName,
+        date: rawDate,
+        fromTime: booking["From Time"] ?? "-",
+        toTime: booking["To Time"] ?? "-",
+        role: role,
+        creator: shootLead,
+        location: location,
+        dop: dop,
+        cast: cast
+      };
+      const bookingDataStr = escapeHtml(JSON.stringify(bookingData));
+
+      // Show delete button only if user is the shoot lead
+      const deleteButtonHtml = isShootLead 
+        ? `<button class="delete-booking-btn" data-booking='${bookingDataStr}' title="Delete this booking">
+             🗑️ Delete
+           </button>`
+        : '';
+
       html += `
         <div class="${cardClass}">
           <div class="booking-header">
@@ -251,6 +284,7 @@ function displayUserBookings(bookings, container) {
             <div class="booking-title-section">
               <h4 class="booking-title">${escapeHtml(String(shootName))} · ${escapeHtml(String(bookingType))} · ${escapeHtml(String(bIpName))}</h4>
             </div>
+            ${deleteButtonHtml}
           </div>
 
           <div class="booking-details">
@@ -295,6 +329,9 @@ function displayUserBookings(bookings, container) {
 
     html += "</div>";
     container.innerHTML = html;
+
+    // Attach delete button event listeners
+    attachDeleteButtonListeners();
 
     console.log("✓ Bookings displayed successfully");
   } catch (error) {
@@ -453,4 +490,104 @@ function escapeHtml(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+/**
+ * Attach event listeners to delete buttons
+ */
+function attachDeleteButtonListeners() {
+  const deleteButtons = document.querySelectorAll('.delete-booking-btn');
+  deleteButtons.forEach(btn => {
+    btn.addEventListener('click', handleDeleteBookingClick);
+  });
+}
+
+/**
+ * Handle delete button click
+ */
+function handleDeleteBookingClick(event) {
+  event.preventDefault();
+  const bookingDataStr = this.getAttribute('data-booking');
+  
+  try {
+    const bookingData = JSON.parse(bookingDataStr);
+    showConfirmationDialog(bookingData);
+  } catch (error) {
+    console.error("Error parsing booking data:", error);
+    UI.showToast("Error processing booking data", "error", 3000);
+  }
+}
+
+/**
+ * Show confirmation dialog for deleting a booking
+ */
+function showConfirmationDialog(bookingData) {
+  const shootName = bookingData.shootName || "-";
+  const date = bookingData.date || "-";
+  const fromTime = bookingData.fromTime || "-";
+  
+  const confirmMsg = `Are you sure you want to delete this booking?\n\nShoot: ${shootName}\nDate: ${date}\nTime: ${fromTime}\n\nThis action cannot be undone.`;
+  
+  if (confirm(confirmMsg)) {
+    deleteBooking(bookingData);
+  }
+}
+
+/**
+ * Delete booking by sending webhook to n8n
+ */
+async function deleteBooking(bookingData) {
+  try {
+    const user = AUTH.getCurrentUser();
+    
+    // Prepare webhook payload
+    const payload = {
+      action: 'delete_booking',
+      command: '/delete_booking',
+      booking: {
+        bookingId: bookingData.bookingId,
+        shootName: bookingData.shootName,
+        type: bookingData.type,
+        bIpName: bookingData.bIpName,
+        date: bookingData.date,
+        fromTime: bookingData.fromTime,
+        toTime: bookingData.toTime,
+        role: bookingData.role,
+        creator: bookingData.creator,
+        location: bookingData.location,
+        dop: bookingData.dop,
+        cast: bookingData.cast
+      },
+      user: {
+        name: user?.name || "-",
+        role: user?.role || "-",
+        email: user?.email || "-"
+      }
+    };
+
+    console.log("📤 Sending delete booking webhook:", payload);
+    
+    // Show loading indicator
+    UI.showToast("Deleting booking...", "info", 2000);
+    
+    // Send webhook
+    const response = await API.postToN8n(payload);
+    
+    console.log("✓ Delete booking response:", response);
+    
+    // Show success and reload bookings
+    UI.showToast("Booking deleted successfully!", "success", 3000);
+    
+    // Reload bookings after a short delay
+    setTimeout(() => {
+      const user = AUTH.getCurrentUser();
+      const role = user?.role || user?.designation || "creator";
+      const name = user?.name || user?.Name || user?.employee || "";
+      loadUserBookings(name, role);
+    }, 1500);
+    
+  } catch (error) {
+    console.error("❌ Error deleting booking:", error);
+    UI.showToast("Failed to delete booking: " + error.message, "error", 4000);
+  }
 }

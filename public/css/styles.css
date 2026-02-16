@@ -1758,6 +1758,31 @@ input::placeholder {
     flex: 1;
 }
 
+.delete-booking-btn {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.delete-booking-btn:hover {
+    background-color: #b71c1c;
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+    transform: translateY(-1px);
+}
+
+.delete-booking-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(211, 47, 47, 0.2);
+}
+
 .booking-details {
     margin-top: 12px;
     padding-top: 12px;
