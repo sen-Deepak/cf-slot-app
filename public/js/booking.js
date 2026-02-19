@@ -337,10 +337,12 @@ function updateLockButtonState() {
 async function lockDateAndTime() {
     const lockBtn = document.getElementById('lockBtn');
     const lockError = document.getElementById('lockError');
+    const lockSuccess = document.getElementById('lockSuccess');
     const lockLoading = document.getElementById('lockLoading');
 
     try {
         UI.showError(lockError, '');
+        if (lockSuccess) lockSuccess.textContent = '';
         UI.setLoading(lockLoading, true);
         lockBtn.disabled = true;
 
@@ -371,6 +373,7 @@ async function lockDateAndTime() {
         if (response?.key === "Ongoing Booking") {
             const msg = 'someone else is booking try after 90 sec';
             UI.showError(lockError, msg);
+            if (lockSuccess) lockSuccess.classList.remove('show');
             lockError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             
             // Auto-refresh after 90 seconds
@@ -410,6 +413,7 @@ async function lockDateAndTime() {
                 UI.showError(lockError, msg);
                 lockError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
+            if (lockSuccess) lockSuccess.classList.remove('show');
             UI.showToast(msg, 'warning', 5000);
             alert(msg);
             return;
@@ -446,14 +450,21 @@ async function lockDateAndTime() {
             window.location.reload();
         }, 90000);
 
-        UI.showToast('Date & Time locked successfully!', 'success', 2000);
+        // Show success message below button
+        if (lockSuccess) {
+            lockSuccess.textContent = 'List successfully loaded';
+            lockSuccess.classList.add('show');
+        }
 
     } catch (error) {
         UI.showError(lockError, error.message || 'Failed to lock date and time');
         UI.showToast('Lock failed', 'error', 3000);
     } finally {
         UI.setLoading(lockLoading, false);
-        lockBtn.disabled = false;
+        // Keep button disabled if lock was successful
+        if (!bookingState.isLocked) {
+            lockBtn.disabled = false;
+        }
     }
 }
 
