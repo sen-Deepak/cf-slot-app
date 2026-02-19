@@ -9,10 +9,22 @@
  */
 
 export default async function handler(req, res) {
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    // Get origin from request or use fallback
+    const origin = req.headers.origin || req.headers.referer?.split('/')[2];
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+        'https://slot-booking-three-xi.vercel.app'
+    ].filter(Boolean);
+
+    // CORS headers - restrict to specific origins
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
     // Handle OPTIONS
     if (req.method === 'OPTIONS') {
@@ -30,8 +42,14 @@ export default async function handler(req, res) {
 
     try {
         // Google Apps Script API endpoint
-        const gasApiUrl = process.env.ATTENDANCE_API_URL || 
-            "https://script.google.com/macros/s/AKfycbyk5av7geQPS1YzxMo1sc2ccNPP-S55kHGJIXy_ijxisSXEgcfZqBlFXv-aAVCF7NzsuQ/exec";
+        const gasApiUrl = process.env.GOOGLE_ATTENDANCE_SCRIPT_URL;
+        
+        if (!gasApiUrl) {
+            return res.status(500).json({
+                ok: false,
+                message: 'Server misconfigured: GOOGLE_ATTENDANCE_SCRIPT_URL missing'
+            });
+        }
 
         if (req.method === 'GET') {
             // Handle read requests

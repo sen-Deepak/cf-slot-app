@@ -2,6 +2,7 @@ import { fetchWithTimeout } from './fetch-util.js';
 import { AUTH } from './auth.js';
 import { UI } from './ui.js';
 import { API } from './api.js';
+import { getConfig } from './config.js';
 
 /**
  * my-day.js - My Day page logic (FINAL)
@@ -13,8 +14,7 @@ import { API } from './api.js';
  * 5) Fixes time sorting for "4:00 pm" strings
  */
 
-const GOOGLE_SCRIPT_API_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbx5IeMkwFxwfvs12nn0YI8QDH0KvJ0Qqva10ajxn6O8i52bOQMyLl1FGFQQa3p3X5J2Rw/exec";
+let GOOGLE_SCRIPT_API_ENDPOINT = null;
 
 const BOOKING_API_KEY = "bookingkey";
 
@@ -23,8 +23,13 @@ let myDayState = {
   sortedBookings: [],
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   if (!AUTH.isAuthenticated()) return;
+  GOOGLE_SCRIPT_API_ENDPOINT = await getConfig('google_myday_script_url');
+  if (!GOOGLE_SCRIPT_API_ENDPOINT) {
+    console.error('❌ GOOGLE_SCRIPT_API_ENDPOINT not configured');
+    return;
+  }
   initializePage();
 });
 

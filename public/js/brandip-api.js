@@ -1,12 +1,11 @@
 import { fetchWithTimeout } from './fetch-util.js';
+import { getConfig } from './config.js';
 
 /**
  * brandip-api.js - API to fetch Brand and IP lists
  */
 
 const BRANDIP_API = {
-    API_URL: "https://script.google.com/macros/s/AKfycbyRe1sOxsZwaV-VGsRV9cOSyvuDK8VADcoT_6BONl1fa4zezH6-eEqnbP1TOrPrhWOK/exec",
-
     /**
      * Fetch list of Brands or IPs from Google Apps Script
      * @param {string} type - "Brand" or "IP"
@@ -14,7 +13,11 @@ const BRANDIP_API = {
      */
     async getNames(type) {
         try {
-            const url = `${this.API_URL}?brandips=${encodeURIComponent(type)}`;
+            const apiUrl = await getConfig('google_brandip_script_url');
+            if (!apiUrl) {
+                throw new Error('google_brandip_script_url not configured');
+            }
+            const url = `${apiUrl}?brandips=${encodeURIComponent(type)}`;
             console.log(`📥 Fetching ${type} list...`);
             const res = await fetchWithTimeout(url);
             if (!res.ok) {

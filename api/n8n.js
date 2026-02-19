@@ -10,10 +10,22 @@
  */
 
 export default async function handler(req, res) {
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    // Get origin from request or use fallback
+    const origin = req.headers.origin || req.headers.referer?.split('/')[2];
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+        'https://slot-booking-three-xi.vercel.app'
+    ].filter(Boolean);
+
+    // CORS headers - restrict to specific origins
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-app-key');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
     // Handle OPTIONS
     if (req.method === 'OPTIONS') {

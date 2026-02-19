@@ -33,7 +33,8 @@ function loadEnv() {
                         value = value.slice(1, -1);
                     }
                     process.env[key.trim()] = value;
-                    if (key.includes('WEBHOOK')) {
+                    // Log all GOOGLE_ and N8N_ variables for debugging
+                    if (key.includes('GOOGLE_') || key.includes('WEBHOOK') || key.includes('N8N_')) {
                         console.log(`✅ ${key.trim()} loaded: ${value.substring(0, 50)}...`);
                     }
                 }
@@ -49,7 +50,7 @@ loadEnv();
 
 // ...existing code...
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
 const MIME_TYPES = {
@@ -71,10 +72,11 @@ const server = http.createServer(async (req, res) => {
 
     console.log(`\n📥 Request: ${req.method} ${pathname}`);
 
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // CORS headers - restrict to localhost for development
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || 'http://localhost:3000');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-app-key');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     
     // Disable caching for dynamic content
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
@@ -109,7 +111,10 @@ const server = http.createServer(async (req, res) => {
         }
 
         try {
-            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5IeMkwFxwfvs12nn0YI8QDH0KvJ0Qqva10ajxn6O8i52bOQMyLl1FGFQQa3p3X5J2Rw/exec";
+            const GOOGLE_SCRIPT_URL = process.env.GOOGLE_MYDAY_SCRIPT_URL;
+            if (!GOOGLE_SCRIPT_URL) {
+                throw new Error('GOOGLE_MYDAY_SCRIPT_URL environment variable not configured');
+            }
             
             const googleUrl = `${GOOGLE_SCRIPT_URL}?employee=${encodeURIComponent(employee)}&key=bookingkey`;
             
@@ -208,7 +213,15 @@ const server = http.createServer(async (req, res) => {
                 console.log(`   Hash: ${passwordHash.substring(0, 16)}...`);
 
                 // Call Google Apps Script to validate credentials
-                const GAS_AUTH_URL = "https://script.google.com/macros/s/AKfycbzhbtv2uI7eIJEUhzwnqaRK6d6AqAKHyOyEIPHZgtz-PTVyJmgWzxRyp6eEuhh3WkXNUA/exec";
+                const GAS_AUTH_URL = process.env.GOOGLE_AUTH_SCRIPT_URL;
+                if (!GAS_AUTH_URL) {
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        ok: false,
+                        message: 'Server misconfigured: GOOGLE_AUTH_SCRIPT_URL missing'
+                    }));
+                    return;
+                }
 
                 try {
                     const gasResponse = await fetch(GAS_AUTH_URL, {
@@ -372,7 +385,10 @@ const server = http.createServer(async (req, res) => {
             }
 
             try {
-                const GAS_URL = "https://script.google.com/macros/s/AKfycbyk5av7geQPS1YzxMo1sc2ccNPP-S55kHGJIXy_ijxisSXEgcfZqBlFXv-aAVCF7NzsuQ/exec";
+                const GAS_URL = process.env.GOOGLE_ATTENDANCE_SCRIPT_URL;
+                if (!GAS_URL) {
+                    throw new Error('GOOGLE_ATTENDANCE_SCRIPT_URL environment variable not configured');
+                }
                 const gasUrl = `${GAS_URL}?action=read&employee=${encodeURIComponent(employee)}`;
                 
                 console.log(`   Calling Google Apps Script...`);
@@ -444,7 +460,15 @@ const server = http.createServer(async (req, res) => {
                     }
 
                     // Forward to Google Apps Script
-                    const GAS_URL = "https://script.google.com/macros/s/AKfycbyk5av7geQPS1YzxMo1sc2ccNPP-S55kHGJIXy_ijxisSXEgcfZqBlFXv-aAVCF7NzsuQ/exec";
+                    const GAS_URL = process.env.GOOGLE_ATTENDANCE_SCRIPT_URL;
+                    if (!GAS_URL) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({
+                            ok: false,
+                            message: 'Server misconfigured: GOOGLE_ATTENDANCE_SCRIPT_URL missing'
+                        }));
+                        return;
+                    }
                     
                     console.log(`   Calling Google Apps Script...`);
 
@@ -500,6 +524,25 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // Handle /api/config GET request (serve configuration)
+    if (pathname === '/api/config' && req.method === 'GET') {
+        console.log('✅ Matched /api/config endpoint');
+        const config = {
+            ok: true,
+            google_creators_script_url: process.env.GOOGLE_CREATORS_SCRIPT_URL,
+            google_myday_script_url: process.env.GOOGLE_MYDAY_SCRIPT_URL,
+            google_brandip_script_url: process.env.GOOGLE_BRANDIP_SCRIPT_URL,
+            google_attendance_script_url: process.env.GOOGLE_ATTENDANCE_SCRIPT_URL
+        };
+        res.writeHead(200, { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        });
+        res.end(JSON.stringify(config));
+        return;
+    }
+
     // Handle root redirect
     if (pathname === '/') {
         pathname = '/login.html';
@@ -538,6 +581,11 @@ server.listen(PORT, HOST, () => {
     console.log(`📍 Local:   http://localhost:${PORT}/`);
     console.log(`🌐 Network: http://172.17.1.247:${PORT}/`);
     console.log(`\n⚙️  Configuration:`);
+    console.log(`   Google Auth Script:     ${process.env.GOOGLE_AUTH_SCRIPT_URL ? '✅ Configured' : '❌ Not configured'}`);
+    console.log(`   Google Creators Script: ${process.env.GOOGLE_CREATORS_SCRIPT_URL ? '✅ Configured' : '❌ Not configured'}`);
+    console.log(`   Google MyDay Script:    ${process.env.GOOGLE_MYDAY_SCRIPT_URL ? '✅ Configured' : '❌ Not configured'}`);
+    console.log(`   Google BrandIP Script:  ${process.env.GOOGLE_BRANDIP_SCRIPT_URL ? '✅ Configured' : '❌ Not configured'}`);
+    console.log(`   Google Attendance Script: ${process.env.GOOGLE_ATTENDANCE_SCRIPT_URL ? '✅ Configured' : '❌ Not configured'}`);
     console.log(`   N8N Webhook: ${process.env.N8N_WEBHOOK_URL ? '✅ Configured' : '❌ Not configured'}`);
     console.log(`   App Key:     ${process.env.APP_KEY ? '✅ Set' : '⚠️  Not set (optional)'}`);
     console.log(`\n⏹️  Press Ctrl+C to stop\n`);
