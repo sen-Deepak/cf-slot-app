@@ -5,6 +5,7 @@
 import { AUTH_API } from './auth-api.js';
 import { AUTH } from './auth.js';
 import { UI } from './ui.js';
+import { VERSION_INFO } from './version.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
@@ -111,4 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginBtn.textContent = 'Login';
         }
     });
+
+    // Display version info in footer
+    VERSION_INFO.displayInFooter('version-footer');
 });

@@ -1,5 +1,6 @@
 import { AUTH } from './auth.js';
 import { UI } from './ui.js';
+import { VERSION_INFO } from './version.js';
 
 /**
  * attendance.js - Attendance marking page
@@ -27,6 +28,7 @@ let attendanceState = {
 document.addEventListener("DOMContentLoaded", () => {
   if (!AUTH.isAuthenticated()) return;
   initializePage();
+  VERSION_INFO.displayInFooter('version-footer');
 });
 
 function initializePage() {

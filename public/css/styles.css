@@ -1936,3 +1936,31 @@ input::placeholder {
         grid-template-columns: 1fr;
     }
 }
+
+/* Version Info Footer */
+.version-info {
+    position: fixed;
+    bottom: 8px;
+    right: 12px;
+    padding: 6px 10px;
+    background: rgba(1, 32, 48, 0.05);
+    border: 1px solid rgba(1, 32, 48, 0.1);
+    border-radius: 6px;
+    font-size: 11px;
+    color: rgba(1, 32, 48, 0.5);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Login page version */
+.login-page .version-info {
+    position: fixed;
+    bottom: 10px;
+    right: 12px;
+}
+
+#version-footer {
+    min-height: 24px;
+}

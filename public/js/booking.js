@@ -6,6 +6,7 @@ import { AUTH } from './auth.js';
 import { UI } from './ui.js';
 import { BRANDIP_API } from './brandip-api.js';
 import { API } from './api.js';
+import { VERSION_INFO } from './version.js';
 
 // State
 let bookingState = {
@@ -37,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     generateTimeOptions();
     loadBrandAndIpLists();  // Load brand and IP lists on page load
+    
+    // Display version info in footer
+    VERSION_INFO.displayInFooter('version-footer');
 });
 
 function initializePage() {
