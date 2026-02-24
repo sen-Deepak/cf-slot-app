@@ -1,5 +1,5 @@
 /**
- * version.js - Version and update info display
+ * version.js - Version and update info displayy
  */
 
 const VERSION_INFO = {
