@@ -1,7 +1,7 @@
 import { AUTH } from './auth.js';
 import { UI } from './ui.js';
-import { VERSION_INFO } from './version.js';
 import { getConfig } from './config.js';
+import { API } from './api.js';
 
 /**
  * attendance.js - Attendance marking page
@@ -39,7 +39,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error('❌ GOOGLE_SCRIPT_API_ENDPOINT not configured');
   }
   initializePage();
-  VERSION_INFO.displayInFooter('version-footer');
 });
 
 function initializePage() {
@@ -122,7 +121,7 @@ async function readAttendance(employee) {
     const url = `${API_URL}?action=read&employee=${encodeURIComponent(employee)}`;
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout (increased)
     
     const res = await fetch(url, { 
       signal: controller.signal,
@@ -140,8 +139,12 @@ async function readAttendance(employee) {
     const data = await res.json();
     return data;
   } catch (error) {
+    if (error.name === 'AbortError') {
+      console.error("❌ Error reading attendance: Request timeout (>15s)");
+      return { ok: false, rows: [] }; // Return empty instead of error
+    }
     console.error("❌ Error reading attendance:", error.message);
-    return {};
+    return { ok: false, rows: [] }; // Return empty instead of error
   }
 }
 
@@ -161,7 +164,7 @@ async function writeAttendance({ date, employee, attendance, isUpdate = false })
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout (increased)
 
     const res = await fetch(API_URL, {
       method: "POST",
@@ -181,7 +184,7 @@ async function writeAttendance({ date, employee, attendance, isUpdate = false })
     return data;
   } catch (error) {
     if (error.name === 'AbortError') {
-      throw new Error('Request timeout - please try again');
+      throw new Error('Request timeout (>15s) - please try again');
     }
     console.error("❌ Error in writeAttendance:", error.message);
     throw error;
@@ -207,7 +210,7 @@ async function fetchShootsData(userName) {
       "&key=" + encodeURIComponent(BOOKING_API_KEY);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout (increased)
 
     const response = await fetch(apiUrl, {
       signal: controller.signal,
@@ -238,7 +241,7 @@ async function fetchShootsData(userName) {
     return data || { ok: true, rows: [] };
   } catch (error) {
     if (error.name === 'AbortError') {
-      console.warn("⚠️ Shoots API request timeout");
+      console.warn("⚠️ Shoots API request timeout (>15s)");
     } else {
       console.warn("⚠️ Error fetching shoots:", error.message);
     }
@@ -609,11 +612,14 @@ async function submitAttendanceForDate(dateString, submitButton) {
     // Determine if this is an update (existing record being edited) or new submission
     const hasExistingRecord = !!attendanceState.existingRecords[dateString];
     
+    // Convert short value to full label for Google Sheet storage
+    const fullLabel = getAttendanceLabel(selectedValue);
+    
     // Call API to write/update attendance
     const result = await writeAttendance({
       date: dateString, // Format: "14 Feb 26"
       employee: attendanceState.userName,
-      attendance: selectedValue,
+      attendance: fullLabel, // Send full label, not short value
       isUpdate: hasExistingRecord && (isEdit || dropdown.classList.contains('editing'))
     });
 
@@ -631,8 +637,19 @@ async function submitAttendanceForDate(dateString, submitButton) {
     }
 
     // Update existing records
+    const oldAttendance = attendanceState.existingRecords[dateString] || "-";
     attendanceState.existingRecords[dateString] = selectedValue;
     attendanceState.records[dateString] = selectedValue;
+
+    // Send webhook notification for attendance update (with full labels)
+    sendAttendanceWebhook({
+      date: dateString,
+      old_attendance: oldAttendance === "-" ? "-" : getAttendanceLabel(oldAttendance),
+      new_attendance: fullLabel,
+      employee: attendanceState.userName,
+      action: "update_attendance",
+      command: "/attendance"
+    });
 
     // Return card to read-only state
     submitButton.textContent = 'Edit';
@@ -666,6 +683,44 @@ async function submitAttendanceForDate(dateString, submitButton) {
     // Re-enable button on error
     submitButton.disabled = false;
     submitButton.textContent = 'Submit';
+  }
+}
+
+/**
+ * Send attendance update webhook notification using same n8n endpoint as other pages
+ * Payload: { date, old_attendance, new_attendance, employee, action, command }
+ */
+async function sendAttendanceWebhook(webhookData) {
+  try {
+    const user = AUTH.getCurrentUser();
+    
+    // Prepare payload in same format as delete booking
+    const payload = {
+      action: 'update_attendance',
+      command: '/attendance',
+      attendance: {
+        date: webhookData.date,
+        old_attendance: webhookData.old_attendance,
+        new_attendance: webhookData.new_attendance,
+        employee: webhookData.employee || user?.name || "-"
+      },
+      user: {
+        name: user?.name || "-",
+        role: user?.role || "-",
+        email: user?.email || "-"
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    console.log('🔔 Sending attendance webhook:', payload);
+
+    // Use same API endpoint as delete booking
+    const response = await API.postToN8n(payload);
+    
+    console.log('✅ Attendance webhook sent successfully:', response);
+  } catch (error) {
+    // Log but don't break the app - attendance was already saved
+    console.warn('⚠️ Error sending webhook:', error.message);
   }
 }
 
@@ -721,4 +776,16 @@ function normalizeAttendanceStatus(apiStatus) {
   };
   
   return statusMap[apiStatus] || apiStatus;
+}
+
+/**
+ * Get full attendance label from short value
+ * Maps option value to option label for Google Sheet storage
+ * E.g., "Partial-Early" → "Partial Day – Leave Early"
+ */
+function getAttendanceLabel(value) {
+  if (!value) return value;
+  
+  const option = ATTENDANCE_OPTIONS.find(opt => opt.value === value);
+  return option ? option.label : value;
 }

@@ -2,7 +2,6 @@ import { fetchWithTimeout } from './fetch-util.js';
 import { AUTH } from './auth.js';
 import { UI } from './ui.js';
 import { API } from './api.js';
-import { VERSION_INFO } from './version.js';
 import { getConfig } from './config.js';
 
 /**
@@ -32,7 +31,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
   initializePage();
-  VERSION_INFO.displayInFooter('version-footer');
 });
 
 function initializePage() {

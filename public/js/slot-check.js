@@ -5,7 +5,6 @@
 import { AUTH } from './auth.js';
 import { UI } from './ui.js';
 import { API } from './api.js';
-import { VERSION_INFO } from './version.js';
 import './creators.js';  // Load creators list
 
 // State
@@ -45,9 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
             setupCreators();
         });
     }
-
-    // Display version info in footer
-    VERSION_INFO.displayInFooter('version-footer');
 });
 
 function initializePage() {
