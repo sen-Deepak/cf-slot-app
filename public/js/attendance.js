@@ -124,14 +124,14 @@ async function readAttendance(employee) {
 }
 
 /**
- * API: Write attendance data via local proxy (which calls Google Apps Script)
+ * API: Write/Update attendance data via local proxy (which calls Google Apps Script)
  */
-async function writeAttendance({ date, employee, attendance }) {
+async function writeAttendance({ date, employee, attendance, isUpdate = false }) {
   try {
     const key = `${date}${employee}`;
     
     const payload = {
-      action: "write",
+      action: isUpdate ? "update" : "write",
       date,
       employee,
       attendance,
@@ -167,7 +167,7 @@ async function writeAttendance({ date, employee, attendance }) {
 }
 
 /**
- * Generate 7 date cards starting from tomorrow
+ * Generate 7 date cards starting from today
  */
 function generateAttendanceCards() {
   const container = document.getElementById("attendanceCardsContainer");
@@ -177,11 +177,12 @@ function generateAttendanceCards() {
 
   for (let i = 0; i < 7; i++) {
     const date = new Date();
-    date.setDate(date.getDate() + 1 + i); // Tomorrow + 7 days
+    date.setDate(date.getDate() + i); // Today + 6 days ahead
     const dateString = formatDateForKey(date);
     const displayDate = formatShortDate(date);
     const dayOfWeek = formatDayOfWeek(date);
     const isSunday = date.getDay() === 0;
+    const isToday = i === 0; // First card is today
 
     // Check if this date already has attendance recorded
     const existingStatus = attendanceState.existingRecords[displayDate];
@@ -192,6 +193,7 @@ function generateAttendanceCards() {
         <div class="attendance-card-header">
           <div class="attendance-date-section">
             <span class="attendance-date">${displayDate}</span>
+            ${isToday ? '<span class="attendance-today-badge">TODAY</span>' : ''}
             <span class="attendance-day ${isSunday ? 'attendance-day--sunday' : ''}">${dayOfWeek}</span>
           </div>
           <select class="attendance-dropdown" data-date="${displayDate}" ${isReadOnly ? 'disabled' : ''}>
@@ -201,9 +203,9 @@ function generateAttendanceCards() {
             ).join('')}
           </select>
         </div>
-        ${isReadOnly ? `<div class="attendance-card-badge">✓ Already Recorded</div>` : ''}
-        <button class="attendance-submit-btn" data-date="${displayDate}" ${isReadOnly ? 'disabled' : ''}>
-          ${isReadOnly ? '✓ Submitted' : 'Submit'}
+        ${isReadOnly ? `<div class="attendance-card-badge">✓ Click Edit to update</div>` : ''}
+        <button class="attendance-submit-btn" data-date="${displayDate}" data-is-edit="${isReadOnly ? 'true' : 'false'}">
+          ${isReadOnly ? 'Edit' : 'Submit'}
         </button>
         <div class="attendance-card-message" data-date="${displayDate}"></div>
       </div>
@@ -249,17 +251,33 @@ function attachSubmitListeners() {
 }
 
 /**
- * Submit attendance for a specific date
+ * Submit/Update attendance for a specific date
  */
 async function submitAttendanceForDate(dateString, submitButton) {
-  const selectedValue = attendanceState.records[dateString];
+  const isEdit = submitButton.dataset.isEdit === 'true';
+  const selectedValue = attendanceState.records[dateString] || attendanceState.existingRecords[dateString];
   const messageDiv = document.querySelector(`.attendance-card-message[data-date="${dateString}"]`);
+  const dropdown = document.querySelector(`.attendance-dropdown[data-date="${dateString}"]`);
 
   try {
     // Clear previous message
     if (messageDiv) {
       messageDiv.innerHTML = '';
       messageDiv.classList.remove('show', 'success', 'error');
+    }
+
+    // If editing, toggle the edit mode
+    if (isEdit && !dropdown.classList.contains('editing')) {
+      // Enable editing mode
+      dropdown.classList.add('editing');
+      dropdown.disabled = false;
+      submitButton.textContent = 'Update';
+      submitButton.dataset.isEdit = 'false';
+      if (messageDiv) {
+        messageDiv.innerHTML = `<span class="info-badge">Select new status and click Update</span>`;
+        messageDiv.classList.add('show');
+      }
+      return;
     }
 
     // Validate selection
@@ -269,17 +287,22 @@ async function submitAttendanceForDate(dateString, submitButton) {
 
     // Disable button during submission
     submitButton.disabled = true;
-    submitButton.textContent = 'Submitting...';
+    const originalText = isEdit || dropdown.classList.contains('editing') ? 'Updating...' : 'Submitting...';
+    submitButton.textContent = originalText;
 
     if (!attendanceState.userName) {
       throw new Error("User name not available");
     }
 
-    // Call API to write attendance
+    // Determine if this is an update (existing record being edited) or new submission
+    const hasExistingRecord = !!attendanceState.existingRecords[dateString];
+    
+    // Call API to write/update attendance
     const result = await writeAttendance({
       date: dateString, // Format: "14 Feb 26"
       employee: attendanceState.userName,
-      attendance: selectedValue
+      attendance: selectedValue,
+      isUpdate: hasExistingRecord && (isEdit || dropdown.classList.contains('editing'))
     });
 
     // Check API response - could be { ok: true } or other format
@@ -287,36 +310,37 @@ async function submitAttendanceForDate(dateString, submitButton) {
       throw new Error(result?.error || "Failed to submit attendance");
     }
 
-    UI.showToast(`Attendance marked as ${selectedValue}`, "success", 2000);
+    const actionType = (isEdit || dropdown.classList.contains('editing')) ? 'Updated' : 'Marked';
+    UI.showToast(`Attendance ${actionType.toLowerCase()} as ${selectedValue}`, "success", 2000);
     
     if (messageDiv) {
-      messageDiv.innerHTML = `<span class="success-badge">✓ Submitted</span>`;
+      messageDiv.innerHTML = `<span class="success-badge">✓ ${actionType}</span>`;
       messageDiv.classList.add('show', 'success');
     }
 
-    // Update existing records to prevent re-editing
+    // Update existing records
     attendanceState.existingRecords[dateString] = selectedValue;
+    attendanceState.records[dateString] = selectedValue;
 
-    // Mark card as read-only
-    submitButton.textContent = '✓ Submitted';
-    const dropdown = document.querySelector(`.attendance-dropdown[data-date="${dateString}"]`);
-    if (dropdown) {
-      dropdown.disabled = true;
-    }
+    // Return card to read-only state
+    submitButton.textContent = 'Edit';
+    submitButton.dataset.isEdit = 'true';
+    dropdown.disabled = true;
+    dropdown.classList.remove('editing');
 
     // Mark card with readonly class
     const card = submitButton.closest('.attendance-card');
-    if (card && !card.classList.contains('attendance-card--readonly')) {
+    if (!card.classList.contains('attendance-card--readonly')) {
       card.classList.add('attendance-card--readonly');
       
-      // Add badge if not already present
-      const existingBadge = card.querySelector('.attendance-card-badge');
-      if (!existingBadge) {
-        const badge = document.createElement('div');
+      // Add or update badge
+      let badge = card.querySelector('.attendance-card-badge');
+      if (!badge) {
+        badge = document.createElement('div');
         badge.className = 'attendance-card-badge';
-        badge.textContent = '✓ Already Recorded';
         card.insertBefore(badge, submitButton);
       }
+      badge.textContent = '✓ Click Edit to update';
     }
 
   } catch (error) {

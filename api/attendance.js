@@ -81,13 +81,13 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'POST') {
-            // Handle write requests
+            // Handle write/update requests
             const { action, date, employee, attendance, key } = req.body;
 
-            if (!action || action !== 'write' || !date || !employee || !attendance) {
+            if (!action || (action !== 'write' && action !== 'update') || !date || !employee || !attendance) {
                 return res.status(400).json({
                     ok: false,
-                    message: 'Missing required fields: action, date, employee, attendance'
+                    message: 'Missing required fields: action (write/update), date, employee, attendance'
                 });
             }
 
@@ -97,7 +97,7 @@ export default async function handler(req, res) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    action: 'write',
+                    action: action,
                     date,
                     employee,
                     attendance,

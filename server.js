@@ -450,11 +450,11 @@ const server = http.createServer(async (req, res) => {
 
                     const { action, date, employee, attendance, key } = payload;
 
-                    if (!action || action !== 'write' || !date || !employee || !attendance) {
+                    if (!action || (action !== 'write' && action !== 'update') || !date || !employee || !attendance) {
                         res.writeHead(400, { 'Content-Type': 'application/json' });
                         res.end(JSON.stringify({
                             ok: false,
-                            message: 'Missing required fields: action, date, employee, attendance'
+                            message: 'Missing required fields: action (write/update), date, employee, attendance'
                         }));
                         return;
                     }
@@ -478,7 +478,7 @@ const server = http.createServer(async (req, res) => {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            action: 'write',
+                            action: action,
                             date,
                             employee,
                             attendance,

@@ -1271,6 +1271,18 @@ input::placeholder {
     color: var(--color-danger);
 }
 
+.attendance-today-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .attendance-dropdown {
     flex: 1;
     min-width: 180px;
@@ -1300,9 +1312,19 @@ input::placeholder {
 }
 
 .attendance-dropdown:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
     background-color: #f5f5f5;
+    color: #999;
+}
+
+.attendance-dropdown.editing {
+    opacity: 1;
+    cursor: pointer;
+    background-color: var(--color-bg);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(19, 103, 138, 0.15);
+    color: var(--color-text);
 }
 
 .attendance-dropdown option {
@@ -1391,6 +1413,15 @@ input::placeholder {
     color: var(--color-danger);
 }
 
+.info-badge {
+    display: inline-block;
+    background-color: rgba(19, 103, 138, 0.1);
+    color: var(--color-primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
 
 /* ========================================
    RESPONSIVE DESIGN
