@@ -163,27 +163,75 @@ async function loadUserBookings(userName, userRole) {
 
 /**
  * Parse times like "4:00 pm" into minutes since midnight
+ * Handles multiple formats:
+ * - 12-hour: "4:00 pm" or "4 pm"
+ * - ISO 8601: "1899-12-30t04:00:50.000z" (after toLowerCase)
+ * - JavaScript Date string: "Sat Dec 30 1899 10:00:00 GMT+0521"
  */
 function parseTimeToMinutes(t) {
   if (!t) return 999999;
   const s = String(t).trim().toLowerCase();
 
-  // Accept "4 pm" too
+  // Try 12-hour format first: "4 pm" or "4:00 pm"
   const m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/);
-  if (!m) return 999999;
+  if (m) {
+    let hh = parseInt(m[1], 10);
+    const mm = parseInt(m[2] || "0", 10);
+    const ap = m[3];
 
-  let hh = parseInt(m[1], 10);
-  const mm = parseInt(m[2] || "0", 10);
-  const ap = m[3];
+    if (ap === "pm" && hh !== 12) hh += 12;
+    if (ap === "am" && hh === 12) hh = 0;
 
-  if (ap === "pm" && hh !== 12) hh += 12;
-  if (ap === "am" && hh === 12) hh = 0;
+    return hh * 60 + mm;
+  }
 
-  return hh * 60 + mm;
+  // Try ISO 8601 format: "1899-12-30t04:00:50.000z" (after toLowerCase)
+  const iso8601Match = s.match(/t(\d{2}):(\d{2}):/);
+  if (iso8601Match) {
+    const hh = parseInt(iso8601Match[1], 10);
+    const mm = parseInt(iso8601Match[2], 10);
+    return hh * 60 + mm;
+  }
+
+  // Try JavaScript Date string: "Sat Dec 30 1899 10:00:00 GMT+0521"
+  const jsDateMatch = s.match(/(\d{2}):(\d{2}):(\d{2})/);
+  if (jsDateMatch) {
+    const hh = parseInt(jsDateMatch[1], 10);
+    const mm = parseInt(jsDateMatch[2], 10);
+    return hh * 60 + mm;
+  }
+
+  // Fallback: try parsing as Date object
+  try {
+    const d = new Date(t);
+    if (!isNaN(d.getTime())) {
+      const hh = d.getHours();
+      const mm = d.getMinutes();
+      return hh * 60 + mm;
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  return 999999;
 }
 
 function sortBookingsByTime(bookings) {
   return bookings.slice().sort((a, b) => {
+    // Get dates
+    const aRawDate = a["Date"] ?? a["Shoot Date"] ?? a["Booking Date"] ?? "-";
+    const bRawDate = b["Date"] ?? b["Shoot Date"] ?? b["Booking Date"] ?? "-";
+
+    // Determine date priority: Today (0) > Tomorrow (1) > Others (2)
+    const aIsToday = isDateToday(aRawDate) ? 0 : (isDateTomorrow(aRawDate) ? 1 : 2);
+    const bIsToday = isDateToday(bRawDate) ? 0 : (isDateTomorrow(bRawDate) ? 1 : 2);
+
+    // First, sort by date priority (today first, then tomorrow, then others)
+    if (aIsToday !== bIsToday) {
+      return aIsToday - bIsToday;
+    }
+
+    // If same date priority, sort by time
     const aMin = parseTimeToMinutes(a["From Time"]);
     const bMin = parseTimeToMinutes(b["From Time"]);
     return aMin - bMin;
