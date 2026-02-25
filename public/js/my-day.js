@@ -1402,12 +1402,13 @@ function displayEditModal(editState) {
   if (editState.availableDops && editState.availableDops.length > 0) {
     dopHtml = editState.availableDops.map(dop => {
       const dopTrimmed = dop ? String(dop).trim() : dop;
+      const dopNameOnly = extractNameOnly(dopTrimmed);  // Display only name, not designation
       const isChecked = editState.selectedDops.has(dopTrimmed);
-      console.log(`  📍 DOP: "${dopTrimmed}" | Checking against selected:`, Array.from(editState.selectedDops), "| Checked:", isChecked);
+      console.log(`  📍 DOP: "${dopTrimmed}" (display: "${dopNameOnly}") | Checked:`, isChecked);
       return `
         <div class="team-member">
           <input type="checkbox" id="dop-${escapeHtml(dopTrimmed)}" class="dop-checkbox" value="${escapeHtml(dopTrimmed)}" ${isChecked ? 'checked' : ''}>
-          <label for="dop-${escapeHtml(dopTrimmed)}">${escapeHtml(dopTrimmed)}</label>
+          <label for="dop-${escapeHtml(dopTrimmed)}">${escapeHtml(dopNameOnly)}</label>
         </div>
       `;
     }).join('');
@@ -1425,12 +1426,13 @@ function displayEditModal(editState) {
   if (editState.availableCast && editState.availableCast.length > 0) {
     castHtml = editState.availableCast.map(cast => {
       const castTrimmed = cast ? String(cast).trim() : cast;
+      const castNameOnly = extractNameOnly(castTrimmed);  // Display only name, not designation
       const isChecked = editState.selectedCast.has(castTrimmed);
-      console.log(`  📍 Cast: "${castTrimmed}" | Checking against selected:`, Array.from(editState.selectedCast), "| Checked:", isChecked);
+      console.log(`  📍 Cast: "${castTrimmed}" (display: "${castNameOnly}") | Checked:`, isChecked);
       return `
         <div class="team-member">
           <input type="checkbox" id="cast-${escapeHtml(castTrimmed)}" class="cast-checkbox" value="${escapeHtml(castTrimmed)}" ${isChecked ? 'checked' : ''}>
-          <label for="cast-${escapeHtml(castTrimmed)}">${escapeHtml(castTrimmed)}</label>
+          <label for="cast-${escapeHtml(castTrimmed)}">${escapeHtml(castNameOnly)}</label>
         </div>
       `;
     }).join('');
@@ -1562,7 +1564,7 @@ async function handleUpdateBookingClick() {
     }
     
     // Send second webhook with changes
-    await submitUpdatedBooking(editState.bookingData, removeUsers, addUsers);
+    await submitUpdatedBooking(editState.bookingData, editState, removeUsers, addUsers);
     
   } catch (error) {
     console.error("❌ Error updating booking:", error);
@@ -1573,9 +1575,23 @@ async function handleUpdateBookingClick() {
 /**
  * Submit updated booking to webhook
  */
-async function submitUpdatedBooking(bookingData, removeUsers, addUsers) {
+async function submitUpdatedBooking(bookingData, editState, removeUsers, addUsers) {
   try {
     const user = AUTH.getCurrentUser();
+    
+    // Get old DOP and Cast (before changes) - names only
+    const oldDop = bookingData.dop ? extractNameOnly(bookingData.dop) : "";
+    const oldCast = bookingData.cast ? bookingData.cast.split(',').map(c => extractNameOnly(c.trim())).join(", ") : "";
+    
+    // Get final selected DOP and Cast lists with names only (no designations)
+    const newDop = Array.from(editState.selectedDops).map(extractNameOnly).join(", ");
+    const newCast = Array.from(editState.selectedCast).map(extractNameOnly).join(", ");
+    
+    console.log("📊 Team Changes (names only):");
+    console.log("  🎥 Old DOP:", oldDop);
+    console.log("  🎥 New DOP:", newDop);
+    console.log("  🎬 Old Cast:", oldCast);
+    console.log("  🎬 New Cast:", newCast);
     
     // Prepare second webhook payload
     const payload = {
@@ -1592,8 +1608,10 @@ async function submitUpdatedBooking(bookingData, removeUsers, addUsers) {
         role: bookingData.role,
         creator: bookingData.creator,
         location: bookingData.location,
-        dop: bookingData.dop,
-        cast: bookingData.cast,
+        oldDop: oldDop,
+        newDop: newDop,
+        oldCast: oldCast,
+        newCast: newCast,
         noOfShoot: bookingData.noOfShoot
       },
       removeUsers: removeUsers,
