@@ -65,6 +65,11 @@ function initializePage() {
     "";
 
   loadUserBookings(name, role);
+
+  // Initialize delete confirmation modal listeners
+  initializeDeleteModal();
+  // Initialize free confirmation modal listeners
+  initializeFreeModal();
 }
 
 async function loadUserBookings(userName, userRole) {
@@ -299,8 +304,20 @@ function displayUserBookings(bookings, container) {
 
       const dop = booking["DOP"] ?? "-";
       const cast = booking["Cast"] ?? "-";
+      const noOfShoot = booking["No Of Shoot"] ?? "-";
 
-      const cardClass = "booking-card user-booking-card" + (isTomorrow ? " user-booking-card--tomorrow" : "");
+      // Check if current user is freed from this booking
+      const bookingId = booking["Booking ID"] ?? booking["ID"] ?? "-";
+      const isUserFreed = isUserFreedFromBooking(bookingId, currentUserName);
+      
+      if (isUserFreed) {
+        console.log(`🔴 Card ${idx + 1}: Booking ID ${bookingId} marked as freed`);
+      }
+
+      let cardClass = "booking-card user-booking-card" + (isTomorrow ? " user-booking-card--tomorrow" : "");
+      if (isUserFreed) {
+        cardClass += " booking-card--freed";
+      }
 
       // Check if current user is the shoot lead (creator)
       const isShootLead = currentUserName && shootLead && 
@@ -308,7 +325,7 @@ function displayUserBookings(bookings, container) {
 
       // Create booking data JSON string for delete button
       const bookingData = {
-        bookingId: booking["Booking ID"] ?? booking["ID"] ?? "-",
+        bookingId: bookingId,
         shootName: shootName,
         type: bookingType,
         bIpName: bIpName,
@@ -319,7 +336,8 @@ function displayUserBookings(bookings, container) {
         creator: shootLead,
         location: location,
         dop: dop,
-        cast: cast
+        cast: cast,
+        noOfShoot: noOfShoot
       };
       const bookingDataStr = escapeHtml(JSON.stringify(bookingData));
 
@@ -330,14 +348,28 @@ function displayUserBookings(bookings, container) {
            </button>`
         : '';
 
+      // Show free button only if user is NOT the shoot lead and NOT already freed
+      const freeButtonHtml = !isShootLead && !isUserFreed
+        ? `<button class="free-booking-btn" data-booking='${bookingDataStr}' title="Mark this shoot as free">
+             ✓ Free
+           </button>`
+        : '';
+
+      // Show freed badge if user is freed
+      const freedBadgeHtml = isUserFreed
+        ? `<span class="freed-badge">Freed</span>`
+        : '';
+
       html += `
         <div class="${cardClass}">
           <div class="booking-header">
             <span class="booking-number">${idx + 1}</span>
             <div class="booking-title-section">
               <h4 class="booking-title">${escapeHtml(String(shootName))} · ${escapeHtml(String(bookingType))} · ${escapeHtml(String(bIpName))}</h4>
+              ${freedBadgeHtml}
             </div>
             ${deleteButtonHtml}
+            ${freeButtonHtml}
           </div>
 
           <div class="booking-details">
@@ -349,6 +381,11 @@ function displayUserBookings(bookings, container) {
             <div class="booking-detail-row">
               <span class="detail-label">Time:</span>
               <span class="detail-value">${escapeHtml(fromTime)} - ${escapeHtml(toTime)}</span>
+            </div>
+
+            <div class="booking-detail-row">
+              <span class="detail-label">No. of Shoots:</span>
+              <span class="detail-value">${escapeHtml(String(noOfShoot))}</span>
             </div>
 
             <div class="booking-detail-row">
@@ -385,6 +422,8 @@ function displayUserBookings(bookings, container) {
 
     // Attach delete button event listeners
     attachDeleteButtonListeners();
+    // Attach free button event listeners
+    attachFreeButtonListeners();
 
     console.log("✓ Bookings displayed successfully");
   } catch (error) {
@@ -546,12 +585,63 @@ function escapeHtml(str) {
 }
 
 /**
+ * Initialize delete confirmation modal event listeners
+ */
+function initializeDeleteModal() {
+  const modal = document.getElementById('deleteConfirmationModal');
+  const cancelBtn = document.getElementById('deleteModalCancelBtn');
+  const deleteBtn = document.getElementById('deleteModalDeleteBtn');
+  const reasonInput = document.getElementById('deleteReasonInput');
+  
+  // Cancel button
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', handleDeleteCancel);
+  }
+  
+  // Delete button
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', handleDeleteConfirm);
+  }
+  
+  // Character count on input
+  if (reasonInput) {
+    reasonInput.addEventListener('input', updateCharCount);
+    
+    // Also handle when modal is closed by clicking outside
+    reasonInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeDeleteModal();
+      }
+    });
+  }
+  
+  // Close modal when clicking outside
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeDeleteModal();
+      }
+    });
+  }
+}
+
+/**
  * Attach event listeners to delete buttons
  */
 function attachDeleteButtonListeners() {
   const deleteButtons = document.querySelectorAll('.delete-booking-btn');
   deleteButtons.forEach(btn => {
     btn.addEventListener('click', handleDeleteBookingClick);
+  });
+}
+
+/**
+ * Attach event listeners to free buttons
+ */
+function attachFreeButtonListeners() {
+  const freeButtons = document.querySelectorAll('.free-booking-btn');
+  freeButtons.forEach(btn => {
+    btn.addEventListener('click', handleFreeBookingClick);
   });
 }
 
@@ -576,20 +666,88 @@ function handleDeleteBookingClick(event) {
  */
 function showConfirmationDialog(bookingData) {
   const shootName = bookingData.shootName || "-";
-  const date = bookingData.date || "-";
-  const fromTime = bookingData.fromTime || "-";
+  const date = formatShortDate(bookingData.date) || "-";
+  const fromTime = formatTime(bookingData.fromTime);
+  const toTime = formatTime(bookingData.toTime);
+  const timeRange = (fromTime !== "-" || toTime !== "-") ? `${fromTime} - ${toTime}` : "-";
   
-  const confirmMsg = `Are you sure you want to delete this booking?\n\nShoot: ${shootName}\nDate: ${date}\nTime: ${fromTime}\n\nThis action cannot be undone.`;
+  // Set booking details in modal
+  document.getElementById('deleteModalShootName').textContent = shootName;
+  document.getElementById('deleteModalDate').textContent = date;
+  document.getElementById('deleteModalTime').textContent = timeRange;
   
-  if (confirm(confirmMsg)) {
-    deleteBooking(bookingData);
+  // Clear the reason input
+  const reasonInput = document.getElementById('deleteReasonInput');
+  reasonInput.value = '';
+  reasonInput.focus();
+  updateCharCount();
+  
+  // Store booking data in modal for later use
+  const modal = document.getElementById('deleteConfirmationModal');
+  modal.dataset.bookingData = JSON.stringify(bookingData);
+  
+  // Show modal
+  modal.classList.add('modal-open');
+}
+
+/**
+ * Update character count display
+ */
+function updateCharCount() {
+  const reasonInput = document.getElementById('deleteReasonInput');
+  const charCount = document.getElementById('charCount');
+  charCount.textContent = reasonInput.value.length;
+}
+
+/**
+ * Close delete confirmation modal
+ */
+function closeDeleteModal() {
+  const modal = document.getElementById('deleteConfirmationModal');
+  modal.classList.remove('modal-open');
+  document.getElementById('deleteReasonInput').value = '';
+  updateCharCount();
+}
+
+/**
+ * Handle delete modal cancel button
+ */
+function handleDeleteCancel() {
+  closeDeleteModal();
+}
+
+/**
+ * Handle delete modal delete button
+ */
+function handleDeleteConfirm() {
+  const reasonInput = document.getElementById('deleteReasonInput');
+  const reason = reasonInput.value.trim();
+  
+  // Validate reason is not empty
+  if (!reason) {
+    UI.showToast("Please provide a reason for deletion", "error", 3000);
+    reasonInput.focus();
+    return;
+  }
+  
+  // Get booking data from modal
+  const modal = document.getElementById('deleteConfirmationModal');
+  const bookingDataStr = modal.dataset.bookingData;
+  
+  try {
+    const bookingData = JSON.parse(bookingDataStr);
+    closeDeleteModal();
+    deleteBooking(bookingData, reason);
+  } catch (error) {
+    console.error("Error parsing booking data:", error);
+    UI.showToast("Error processing booking data", "error", 3000);
   }
 }
 
 /**
  * Delete booking by sending webhook to n8n
  */
-async function deleteBooking(bookingData) {
+async function deleteBooking(bookingData, reason = '') {
   try {
     const user = AUTH.getCurrentUser();
     
@@ -609,7 +767,8 @@ async function deleteBooking(bookingData) {
         creator: bookingData.creator,
         location: bookingData.location,
         dop: bookingData.dop,
-        cast: bookingData.cast
+        cast: bookingData.cast,
+        deleteReason: reason || ""
       },
       user: {
         name: user?.name || "-",
@@ -642,5 +801,231 @@ async function deleteBooking(bookingData) {
   } catch (error) {
     console.error("❌ Error deleting booking:", error);
     UI.showToast("Failed to delete booking: " + error.message, "error", 4000);
+  }
+}
+
+/**
+ * Handle free button click
+ */
+function handleFreeBookingClick(event) {
+  event.preventDefault();
+  const bookingDataStr = this.getAttribute('data-booking');
+  
+  try {
+    const bookingData = JSON.parse(bookingDataStr);
+    showFreeConfirmationDialog(bookingData);
+  } catch (error) {
+    console.error("Error parsing booking data:", error);
+    UI.showToast("Error processing booking data", "error", 3000);
+  }
+}
+
+/**
+ * Show confirmation dialog for marking a booking as free
+ */
+function showFreeConfirmationDialog(bookingData) {
+  const shootName = bookingData.shootName || "-";
+  const date = formatShortDate(bookingData.date) || "-";
+  const fromTime = formatTime(bookingData.fromTime);
+  const toTime = formatTime(bookingData.toTime);
+  const timeRange = (fromTime !== "-" || toTime !== "-") ? `${fromTime} - ${toTime}` : "-";
+  
+  // Set booking details in modal
+  document.getElementById('freeModalShootName').textContent = shootName;
+  document.getElementById('freeModalDate').textContent = date;
+  document.getElementById('freeModalTime').textContent = timeRange;
+  
+  // Store booking data in modal for later use
+  const modal = document.getElementById('freeConfirmationModal');
+  modal.dataset.bookingData = JSON.stringify(bookingData);
+  
+  // Show modal
+  modal.classList.add('modal-open');
+}
+
+/**
+ * Close free confirmation modal
+ */
+function closeFreeModal() {
+  const modal = document.getElementById('freeConfirmationModal');
+  modal.classList.remove('modal-open');
+}
+
+/**
+ * Handle free modal cancel button
+ */
+function handleFreeCancel() {
+  closeFreeModal();
+}
+
+/**
+ * Handle free modal OK button
+ */
+function handleFreeConfirm() {
+  // Get booking data from modal
+  const modal = document.getElementById('freeConfirmationModal');
+  const bookingDataStr = modal.dataset.bookingData;
+  
+  try {
+    const bookingData = JSON.parse(bookingDataStr);
+    closeFreeModal();
+    markBookingFree(bookingData);
+  } catch (error) {
+    console.error("Error parsing booking data:", error);
+    UI.showToast("Error processing booking data", "error", 3000);
+  }
+}
+
+/**
+ * Save freed booking to localStorage
+ */
+function saveFreedBooking(bookingId, freePersonList) {
+  try {
+    let freedBookings = JSON.parse(localStorage.getItem('freedBookings')) || {};
+    freedBookings[bookingId] = freePersonList;
+    localStorage.setItem('freedBookings', JSON.stringify(freedBookings));
+    console.log("✓ Freed booking saved to localStorage:", { bookingId, freePersonList });
+    console.log("📦 All freed bookings:", freedBookings);
+  } catch (error) {
+    console.error("Error saving freed booking:", error);
+  }
+}
+
+/**
+ * Get freed bookings from localStorage
+ */
+function getFreedBookings() {
+  try {
+    return JSON.parse(localStorage.getItem('freedBookings')) || {};
+  } catch (error) {
+    console.error("Error getting freed bookings:", error);
+    return {};
+  }
+}
+
+/**
+ * Check if current user is in the freed list for a booking
+ */
+function isUserFreedFromBooking(bookingId, currentUserName) {
+  const freedBookings = getFreedBookings();
+  const freePersonList = freedBookings[bookingId];
+  
+  if (!freePersonList || !currentUserName) return false;
+  
+  // Parse comma-separated list and check if user is in it (case-insensitive)
+  const freePersonArray = freePersonList
+    .split(',')
+    .map(name => name.trim().toLowerCase());
+  
+  const userNameLower = String(currentUserName).trim().toLowerCase();
+  const isFreed = freePersonArray.includes(userNameLower);
+  
+  if (isFreed) {
+    console.log(`✓ User ${currentUserName} is freed from booking ${bookingId}`, { freePersonArray, userNameLower });
+  }
+  
+  return isFreed;
+}
+
+/**
+ * Mark booking as free by sending webhook to n8n
+ */
+async function markBookingFree(bookingData) {
+  try {
+    const user = AUTH.getCurrentUser();
+    
+    // Prepare webhook payload
+    const payload = {
+      action: 'free',
+      command: '/creator_exit_shoot',
+      booking: {
+        bookingId: bookingData.bookingId,
+        shootName: bookingData.shootName,
+        type: bookingData.type,
+        bIpName: bookingData.bIpName,
+        date: bookingData.date,
+        fromTime: bookingData.fromTime,
+        toTime: bookingData.toTime,
+        role: bookingData.role,
+        creator: bookingData.creator,
+        location: bookingData.location,
+        dop: bookingData.dop,
+        cast: bookingData.cast,
+        noOfShoot: bookingData.noOfShoot
+      },
+      user: {
+        name: user?.name || "-",
+        role: user?.role || "-",
+        email: user?.email || "-"
+      }
+    };
+
+    console.log("📤 Sending free booking webhook:", payload);
+    
+    // Show loading indicator
+    UI.showToast("Marking shoot as free...", "info", 2000);
+    
+    // Send webhook
+    const response = await API.postToN8n(payload);
+    
+    console.log("✓ Free booking response:", response);
+    
+    // Store freed booking data in localStorage
+    if (response) {
+      let freedData = response;
+      
+      // Handle array response
+      if (Array.isArray(response) && response.length > 0) {
+        freedData = response[0];
+      }
+      
+      if (freedData["Booking ID"] && freedData["Free person"]) {
+        console.log("📝 Saving freed booking:", freedData);
+        saveFreedBooking(freedData["Booking ID"], freedData["Free person"]);
+      }
+    }
+    
+    // Show success and reload bookings
+    UI.showToast("Shoot marked as free successfully!", "success", 3000);
+    
+    // Reload bookings after a short delay
+    setTimeout(() => {
+      const user = AUTH.getCurrentUser();
+      const role = user?.role || user?.designation || "creator";
+      const name = user?.name || user?.Name || user?.employee || "";
+      loadUserBookings(name, role);
+    }, 1500);
+    
+  } catch (error) {
+    console.error("❌ Error marking booking as free:", error);
+    UI.showToast("Failed to mark shoot as free: " + error.message, "error", 4000);
+  }
+}
+
+/**
+ * Initialize free confirmation modal event listeners
+ */
+function initializeFreeModal() {
+  const modal = document.getElementById('freeConfirmationModal');
+  const cancelBtn = document.getElementById('freeModalCancelBtn');
+  const okBtn = document.getElementById('freeModalOkBtn');
+  
+  // Cancel button
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', handleFreeCancel);
+  }
+  
+  // OK button
+  if (okBtn) {
+    okBtn.addEventListener('click', handleFreeConfirm);
+  }
+  
+  // Close modal when clicking outside
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeFreeModal();
+      }
+    });
   }
 }

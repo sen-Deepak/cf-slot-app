@@ -27,7 +27,7 @@ const UI = {
             color: white;
             border-radius: 0.5rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
+            z-index: 9999;
             animation: slideInDown 0.3s ease-out;
             word-wrap: break-word;
         `;

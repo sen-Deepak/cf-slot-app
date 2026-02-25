@@ -791,6 +791,128 @@ input::placeholder {
     border-radius: 999px;
 }
 
+/* Delete Confirmation Modal */
+.delete-modal-content {
+    max-width: 450px;
+    text-align: left;
+}
+
+.free-modal-content {
+    max-width: 450px;
+    text-align: left;
+}
+
+.booking-details-preview {
+    background: var(--bg-light);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius);
+    margin: var(--spacing-lg) 0;
+    font-size: 0.95rem;
+    color: var(--text);
+}
+
+.booking-details-preview p {
+    margin: var(--spacing-sm) 0;
+}
+
+.booking-details-preview strong {
+    color: var(--text);
+}
+
+.delete-modal-form-group {
+    margin: var(--spacing-lg) 0;
+}
+
+.delete-reason-label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.required-star {
+    color: var(--error);
+    margin-left: 2px;
+}
+
+.delete-reason-input {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--surface);
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.delete-reason-input::placeholder {
+    color: var(--text-muted);
+}
+
+.delete-reason-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(255, 108, 0, 0.1);
+}
+
+.char-count {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: var(--spacing-sm);
+    text-align: right;
+}
+
+.modal-button-group {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-danger {
+    background: #ff6b6b;
+    color: white;
+    border: 2px solid #d32f2f;
+    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #d32f2f;
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+    border: 2px solid #059669;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #059669;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    transform: translateY(-2px);
+}
+
 /* ========================================
    DATE & TIME SELECTORS
    ======================================== */
@@ -1751,6 +1873,29 @@ input::placeholder {
     box-shadow: 0 6px 16px rgba(198, 40, 40, 0.15);
 }
 
+.booking-card--freed {
+    background: rgba(255, 107, 107, 0.1);
+    opacity: 0.7;
+    border-left-color: #ef4444 !important;
+}
+
+.booking-card--freed:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.freed-badge {
+    display: inline-block;
+    background: #ef4444;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    text-transform: uppercase;
+}
+
 .booking-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
@@ -1812,6 +1957,31 @@ input::placeholder {
 .delete-booking-btn:active {
     transform: translateY(0);
     box-shadow: 0 1px 4px rgba(211, 47, 47, 0.2);
+}
+
+.free-booking-btn {
+    background-color: #10b981;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.free-booking-btn:hover {
+    background-color: #059669;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    transform: translateY(-1px);
+}
+
+.free-booking-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(16, 185, 129, 0.2);
 }
 
 .booking-details {
