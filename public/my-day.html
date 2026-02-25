@@ -98,6 +98,45 @@
         </div>
     </div>
 
+    <!-- Edit Booking Modal -->
+    <div id="editBookingModal" class="modal-overlay">
+        <div class="modal-content edit-modal-content">
+            <h2 class="modal-title">Edit Shoot Team</h2>
+            
+            <div id="editBookingDetails" class="booking-details-preview">
+                <p><strong>Shoot:</strong> <span id="editModalShootName">-</span></p>
+                <p><strong>Date:</strong> <span id="editModalDate">-</span></p>
+                <p><strong>Time:</strong> <span id="editModalTime">-</span></p>
+            </div>
+
+            <div class="edit-modal-body">
+                <!-- DOP and Cast in two columns -->
+                <div class="edit-modal-grid">
+                    <!-- DOP Section -->
+                    <div class="team-section">
+                        <h3 class="team-section-title">🎥 DOP</h3>
+                        <div id="dopList" class="team-list">
+                            <p class="loading-text">Loading DOP list...</p>
+                        </div>
+                    </div>
+
+                    <!-- Cast/Creator Section -->
+                    <div class="team-section">
+                        <h3 class="team-section-title">🎬 Cast/Creators</h3>
+                        <div id="castList" class="team-list">
+                            <p class="loading-text">Loading cast list...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-button-group">
+                <button id="editModalCancelBtn" class="btn btn-secondary modal-btn">Cancel</button>
+                <button id="editModalUpdateBtn" class="btn btn-primary modal-btn">Update Booking</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Version Info Footer -->
     <div id="version-footer"></div>
 
