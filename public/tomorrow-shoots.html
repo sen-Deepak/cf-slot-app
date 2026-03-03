@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomorrow's Shoots - CreativeFuel</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header: top row = logo + logout, bottom row = page tabs -->
+        <header class="header">
+            <div class="header-top-row">
+                <a href="/tomorrow-shoots.html" class="header-logo-link">
+                    <img src="/images/screenshot-removebg.png" alt="CreativeFuel" class="header-logo">
+                </a>
+                <span id="userNameDisplay" class="header-username"></span>
+                <button id="logoutBtn" class="btn btn-small btn-secondary">Logout</button>
+            </div>
+            <nav class="tabs-container">
+                <div class="tabs">
+                    <!-- Tabs will be dynamically rendered by nav.js -->
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Overview Section -->
+            <section class="section section-overview">
+                <h2>Overview</h2>
+                <div class="overview-grid">
+                    <div class="overview-card">
+                        <div class="card-icon">📋</div>
+                        <div class="card-content">
+                            <p class="card-label">Bookings</p>
+                            <p class="card-value" id="bookingCount">0</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="card-icon">🎬</div>
+                        <div class="card-content">
+                            <p class="card-label">Videos</p>
+                            <p class="card-value" id="videoCount">0</p>
+                        </div>
+                    </div>
+                    <div class="overview-card clickable" id="deleteBookingCard">
+                        <div class="card-icon">🗑️</div>
+                        <div class="card-content">
+                            <p class="card-label">Delete Booking</p>
+                            <p class="card-value" id="deleteBookingCount">0</p>
+                        </div>
+                    </div>
+                    <div class="overview-card clickable" id="deleteShootsCard">
+                        <div class="card-icon">❌</div>
+                        <div class="card-content">
+                            <p class="card-label">Delete Shoots</p>
+                            <p class="card-value" id="deleteShootsCount">0</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Attendance Section -->
+            <section class="section section-attendance">
+                <h2>Attendance</h2>
+                <div id="attendanceContent" class="attendance-container">
+                    <p>Loading attendance data...</p>
+                </div>
+            </section>
+
+            <!-- Brand/IP Section -->
+            <section class="section section-brand-ip">
+                <h2>Brand / IP</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Name</th>
+                                <th>No. of Shoots</th>
+                            </tr>
+                        </thead>
+                        <tbody id="brandIpTableBody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: #999;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Tomorrow's Shoots Section -->
+            <section class="section section-shoots">
+                <h2>Schedule</h2>
+                <div id="shootsList" class="shoots-container">
+                    <p>Loading shoots...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="/js/auth.js"></script>
+    <script type="module" src="/js/nav.js"></script>
+    <script type="module" src="/js/tomorrow-shoots.js"></script>
+</body>
+</html>

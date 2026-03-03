@@ -34,6 +34,14 @@ let attendanceState = {
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!AUTH.isAuthenticated()) return;
+  
+  // Check if user is admin - if so, redirect to admin dashboard
+  const user = AUTH.getCurrentUser();
+  if (user && user.role === 'Admin') {
+    window.location.href = '/todays-shoots.html';
+    return;
+  }
+  
   GOOGLE_SCRIPT_API_ENDPOINT = await getConfig('google_myday_script_url');
   if (!GOOGLE_SCRIPT_API_ENDPOINT) {
     console.error('❌ GOOGLE_SCRIPT_API_ENDPOINT not configured');

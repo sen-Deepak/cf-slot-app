@@ -33,6 +33,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Check if user is admin - if so, redirect to admin dashboard
+    const user = AUTH.getCurrentUser();
+    if (user && user.role === 'Admin') {
+        window.location.href = '/todays-shoots.html';
+        return;
+    }
+
     initializePage();
     setupEventListeners();
     generateTimeOptions();

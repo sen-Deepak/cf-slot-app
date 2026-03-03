@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance - CreativeFuel</title>
+    <title>Live - CreativeFuel</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
         <!-- Header: top row = logo + logout, bottom row = page tabs -->
         <header class="header">
             <div class="header-top-row">
-                <a href="/booking.html" class="header-logo-link">
+                <a href="/live.html" class="header-logo-link">
                     <img src="/images/screenshot-removebg.png" alt="CreativeFuel" class="header-logo">
                 </a>
                 <span id="userNameDisplay" class="header-username"></span>
@@ -26,26 +26,18 @@
 
         <!-- Main content -->
         <main class="main-content">
-            <!-- Attendance Section -->
             <section class="section">
-                <h2>Attendance</h2>
-                <p class="section-subtitle">Mark your attendance for today and next 6 days</p>
-                
-                <div id="attendanceCardsContainer" class="attendance-cards-container">
-                    <!-- Cards will be generated here -->
+                <h2>Live</h2>
+                <div id="liveContent" class="live-container">
+                    <p>Loading live stream...</p>
                 </div>
-
-                <div id="attendanceError" class="error-message"></div>
             </section>
         </main>
     </div>
 
-    <!-- Version Info Footer -->
-    <div id="version-footer"></div>
-
     <!-- Scripts -->
     <script type="module" src="/js/auth.js"></script>
     <script type="module" src="/js/nav.js"></script>
-    <script type="module" src="/js/attendance.js?v=1"></script>
+    <script type="module" src="/js/live.js"></script>
 </body>
 </html>

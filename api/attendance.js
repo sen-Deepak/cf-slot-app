@@ -52,18 +52,50 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'GET') {
-            // Handle read requests
-            const employee = req.query.employee || req.url.split('employee=')[1]?.split('&')[0];
+            // Handle read and read_all requests
+            const action = (req.query.action || 'read').toLowerCase();
             
-            if (!employee) {
+            // Extract parameters from req.query (works in Express/Node)
+            let employee = req.query.employee;
+            let from = req.query.from;
+            let to = req.query.to;
+
+            // Debug logging
+            console.log('📍 Attendance API GET request:');
+            console.log('  action:', action);
+            console.log('  employee:', employee);
+            console.log('  from:', from);
+            console.log('  to:', to);
+            console.log('  req.query:', req.query);
+
+            // Validate parameters
+            if (action === 'read' && !employee) {
+                console.log('❌ Missing employee for read action');
                 return res.status(400).json({
                     ok: false,
-                    message: 'Missing employee parameter'
+                    message: 'Missing employee parameter for read action'
                 });
             }
 
-            const readUrl = `${gasApiUrl}?action=read&employee=${encodeURIComponent(employee)}`;
+            if (action === 'read_all') {
+                if (!from || !to) {
+                    console.log(`❌ Missing from/to for read_all: from="${from}", to="${to}"`);
+                    return res.status(400).json({
+                        ok: false,
+                        message: `Missing from and to parameters for read_all action. Received: from="${from}", to="${to}"`
+                    });
+                }
+            }
 
+            // Build the URL to forward to Google Apps Script
+            let readUrl = gasApiUrl;
+            if (action === 'read') {
+                readUrl = `${gasApiUrl}?action=read&employee=${encodeURIComponent(employee)}`;
+            } else if (action === 'read_all') {
+                readUrl = `${gasApiUrl}?action=read_all&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+            }
+
+            console.log('📤 Forwarding to GAS:', readUrl);
             const gasRes = await fetch(readUrl);
             
             if (!gasRes.ok) {

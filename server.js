@@ -90,6 +90,13 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // Handle favicon request
+    if (pathname === '/favicon.ico') {
+        res.writeHead(204); // 204 No Content
+        res.end();
+        return;
+    }
+
     // Handle /api/google-script GET request (fetch bookings)
     if (pathname === '/api/google-script' && req.method === 'GET') {
         console.log('✅ Matched /api/google-script endpoint');
@@ -370,16 +377,43 @@ const server = http.createServer(async (req, res) => {
         }
 
         if (req.method === 'GET') {
-            // Handle read requests
+            // Handle read and read_all requests
             const queryParams = new URL(`http://localhost${req.url}`).searchParams;
+            const action = (queryParams.get('action') || 'read').toLowerCase();
             const employee = queryParams.get('employee');
-            const action = queryParams.get('action');
+            const from = queryParams.get('from');
+            const to = queryParams.get('to');
 
-            if (!employee) {
+            console.log(`   📍 GET /api/attendance`);
+            console.log(`      action: ${action}, employee: ${employee}, from: ${from}, to: ${to}`);
+
+            // Validate required parameters for each action
+            if (action === 'read') {
+                if (!employee) {
+                    console.log(`      ❌ Missing employee for action=read`);
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        ok: false,
+                        message: 'Missing employee parameter for read action'
+                    }));
+                    return;
+                }
+            } else if (action === 'read_all') {
+                if (!from || !to) {
+                    console.log(`      ❌ Missing from/to for action=read_all: from="${from}", to="${to}"`);
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        ok: false,
+                        message: `Missing from and to parameters for read_all action. from="${from}", to="${to}"`
+                    }));
+                    return;
+                }
+            } else {
+                console.log(`      ❌ Unknown action: ${action}`);
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     ok: false,
-                    message: 'Missing employee parameter'
+                    message: 'Invalid action. Use action=read or action=read_all'
                 }));
                 return;
             }
@@ -389,9 +423,15 @@ const server = http.createServer(async (req, res) => {
                 if (!GAS_URL) {
                     throw new Error('GOOGLE_ATTENDANCE_SCRIPT_URL environment variable not configured');
                 }
-                const gasUrl = `${GAS_URL}?action=read&employee=${encodeURIComponent(employee)}`;
+
+                let gasUrl = GAS_URL;
+                if (action === 'read') {
+                    gasUrl = `${GAS_URL}?action=read&employee=${encodeURIComponent(employee)}`;
+                } else if (action === 'read_all') {
+                    gasUrl = `${GAS_URL}?action=read_all&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+                }
                 
-                console.log(`   Calling Google Apps Script...`);
+                console.log(`   📤 Calling Google Apps Script: ${gasUrl.substring(0, 80)}...`);
 
                 const fetch_response = await fetch(gasUrl, {
                     method: 'GET',
@@ -532,7 +572,8 @@ const server = http.createServer(async (req, res) => {
             google_creators_script_url: process.env.GOOGLE_CREATORS_SCRIPT_URL,
             google_myday_script_url: process.env.GOOGLE_MYDAY_SCRIPT_URL,
             google_brandip_script_url: process.env.GOOGLE_BRANDIP_SCRIPT_URL,
-            google_attendance_script_url: process.env.GOOGLE_ATTENDANCE_SCRIPT_URL
+            google_attendance_script_url: process.env.GOOGLE_ATTENDANCE_SCRIPT_URL,
+            google_admin_data_script_url: process.env.GOOGLE_ADMIN_DATA_SCRIPT_URL
         };
         res.writeHead(200, { 
             'Content-Type': 'application/json',
@@ -540,6 +581,105 @@ const server = http.createServer(async (req, res) => {
             'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
         });
         res.end(JSON.stringify(config));
+        return;
+    }
+
+    // Handle /api/admin-shoots GET request (proxy to Google Apps Script)
+    if (pathname === '/api/admin-shoots' && req.method === 'GET') {
+        console.log('📡 Matched /api/admin-shoots endpoint');
+        const googleApiUrl = process.env.GOOGLE_ADMIN_DATA_SCRIPT_URL;
+        
+        if (!googleApiUrl) {
+            console.error('❌ GOOGLE_ADMIN_DATA_SCRIPT_URL not configured');
+            res.writeHead(500, { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            });
+            res.end(JSON.stringify({ ok: false, error: 'Admin data API not configured' }));
+            return;
+        }
+
+        // Build the full URL with query parameters
+        // The googleApiUrl is just the endpoint, so use ? separator for first param
+        const queryString = parsedUrl.search || '';
+        let fullUrl = googleApiUrl;
+        
+        if (queryString) {
+            const queryParams = queryString.startsWith('?') ? queryString.substring(1) : queryString;
+            fullUrl = googleApiUrl + '?' + queryParams;
+        }
+        
+        console.log('📡 Built URL:', fullUrl.substring(0, 100) + '...');
+        console.log('📡 Proxying to Google API with query params');
+
+        // Fetch from Google Apps Script (no CORS issues on server-side)
+        (async () => {
+            try {
+                const httpsModule = require('https');
+                
+                // Helper function to follow redirects
+                const fetchWithRedirects = (url, maxRedirects = 5) => {
+                    return new Promise((resolve, reject) => {
+                        if (maxRedirects === 0) {
+                            reject(new Error('Too many redirects'));
+                            return;
+                        }
+
+                        const proxyReq = httpsModule.get(url, {
+                            timeout: 10000,
+                            headers: { 'User-Agent': 'CreativeFuel-Booking-App/1.0' }
+                        }, (proxyRes) => {
+                            // Handle redirects (301, 302, 303, 307, 308)
+                            if (proxyRes.statusCode >= 300 && proxyRes.statusCode < 400 && proxyRes.headers.location) {
+                                console.log(`📍 Redirect ${proxyRes.statusCode} to:`, proxyRes.headers.location.substring(0, 80) + '...');
+                                // Consume response to free up connection
+                                proxyRes.on('data', () => {});
+                                proxyRes.on('end', () => {
+                                    fetchWithRedirects(proxyRes.headers.location, maxRedirects - 1).then(resolve).catch(reject);
+                                });
+                                return;
+                            }
+
+                            let data = '';
+                            proxyRes.on('data', chunk => { data += chunk; });
+                            proxyRes.on('end', () => {
+                                if (proxyRes.statusCode < 200 || proxyRes.statusCode >= 300) {
+                                    reject(new Error(`HTTP ${proxyRes.statusCode}: ${data.substring(0, 100)}`));
+                                } else {
+                                    console.log('✅ Google API responded with status:', proxyRes.statusCode);
+                                    resolve({ statusCode: proxyRes.statusCode, data, headers: proxyRes.headers });
+                                }
+                            });
+                        });
+
+                        proxyReq.on('error', err => {
+                            console.error('❌ Request error:', err.message);
+                            reject(err);
+                        });
+                        
+                        proxyReq.on('timeout', () => {
+                            proxyReq.destroy();
+                            reject(new Error('Request timeout'));
+                        });
+                    });
+                };
+
+                const { statusCode, data } = await fetchWithRedirects(fullUrl);
+                res.writeHead(statusCode || 200, {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+                });
+                res.end(data);
+                
+            } catch (err) {
+                console.error('❌ Proxy error:', err.message);
+                res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+                res.end(JSON.stringify({ ok: false, error: 'Proxy failed: ' + err.message }));
+            }
+        })();
         return;
     }
 
