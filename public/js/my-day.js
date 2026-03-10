@@ -80,6 +80,8 @@ function initializePage() {
   initializeFreeModal();
   // Initialize edit modal listeners
   initializeEditModal();
+  // Initialize complete modal listeners
+  initializeCompleteModal();
 }
 
 async function loadUserBookings(userName, userRole) {
@@ -276,6 +278,67 @@ function updateBookingCountBadges(bookings) {
   `;
 }
 
+/**
+ * Detect link type and return icon SVG and type
+ */
+function getLinkIconInfo(url) {
+  const urlLower = String(url).toLowerCase();
+  
+  // PDF
+  if (urlLower.includes(".pdf") || urlLower.includes("pdf")) {
+    return {
+      type: "pdf",
+      svg: '<path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1"/><path d="M4.603 12.087a.8.8 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.102.198-.307.526-.568.897-.787a7.7 7.7 0 0 1 1.482-.645 20 20 0 0 0 1.062-2.227 7.3 7.3 0 0 1-.43-1.295c-.086-.4-.119-.796-.046-1.136.075-.354.274-.672.65-.823.192-.077.4-.12.602-.077a.7.7 0 0 1 .477.365c.088.164.12.356.127.538.007.187-.012.395-.047.614-.084.51-.27 1.134-.52 1.794a11 11 0 0 0 .98 1.686 5.8 5.8 0 0 1 1.334.05c.364.065.734.195.96.465.12.144.193.32.2.518.007.192-.047.382-.138.563a1.04 1.04 0 0 1-.354.416.86.86 0 0 1-.51.138c-.331-.014-.654-.196-.933-.417a5.7 5.7 0 0 1-.911-.95 11.6 11.6 0 0 0-1.997.406 11.3 11.3 0 0 1-1.021 1.51c-.29.35-.608.655-.926.787a.8.8 0 0 1-.58.029m1.379-1.901q-.25.115-.459.238c-.328.194-.541.383-.647.547-.094.145-.096.25-.04.361q.016.032.026.044l.035-.012c.137-.056.355-.235.635-.572a8 8 0 0 0 .45-.606m1.64-1.33a13 13 0 0 1 1.01-.193 12 12 0 0 1-.51-.858 21 21 0 0 1-.5 1.05zm2.446.45q.226.244.435.41c.24.19.407.253.498.256a.1.1 0 0 0 .07-.015.3.3 0 0 0 .094-.125.44.44 0 0 0 .059-.2.1.1 0 0 0-.026-.063c-.052-.062-.2-.152-.518-.209a4 4 0 0 0-.612-.053zM8.078 5.8a7 7 0 0 0 .2-.828q.046-.282.038-.465a.6.6 0 0 0-.032-.198.5.5 0 0 0-.145.04c-.087.035-.158.106-.196.283-.04.192-.03.469.046.822q.036.167.09.346z"/>'
+    };
+  }
+  
+  // Google Sheets
+  if (urlLower.includes("docs.google.com/spreadsheets")) {
+    return {
+      type: "sheets",
+      svg: '<path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm15 2h-4v3h4zm0 4h-4v3h4zm0 4h-4v3h3a1 1 0 0 0 1-1zm-5 3v-3H6v3zm-5 0v-3H1v2a1 1 0 0 0 1 1zm-4-4h4V8H1zm0-4h4V4H1zm5-3v3h4V4zm4 4H6v3h4z"/>'
+    };
+  }
+  
+  // Google Slides (must come before generic document)
+  if (urlLower.includes("docs.google.com/presentation")) {
+    return {
+      type: "slides",
+      svg: '<path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1"/><path d="M6 5a1 1 0 0 1 1-1h1.188a2.75 2.75 0 0 1 0 5.5H7v2a.5.5 0 0 1-1 0zm1 3.5h1.188a1.75 1.75 0 1 0 0-3.5H7z"/>'
+    };
+  }
+  
+  // PowerPoint
+  if (urlLower.includes(".ppt") || urlLower.includes(".pptx") || urlLower.includes("powerpoint")) {
+    return {
+      type: "ppt",
+      svg: '<path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1"/><path d="M6 5a1 1 0 0 1 1-1h1.188a2.75 2.75 0 0 1 0 5.5H7v2a.5.5 0 0 1-1 0zm1 3.5h1.188a1.75 1.75 0 1 0 0-3.5H7z"/>'
+    };
+  }
+  
+  // Google Docs (generic document)
+  if (urlLower.includes("docs.google.com/document")) {
+    return {
+      type: "docs",
+      svg: '<path fill-rule="evenodd" d="M14 4.5V14a2 2 0 0 1-2 2v-1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zm-7.839 9.166v.522q0 .384-.117.641a.86.86 0 0 1-.322.387.9.9 0 0 1-.469.126.9.9 0 0 1-.471-.126.87.87 0 0 1-.32-.386 1.55 1.55 0 0 1-.117-.642v-.522q0-.386.117-.641a.87.87 0 0 1 .32-.387.87.87 0 0 1 .471-.129q.264 0 .469.13a.86.86 0 0 1 .322.386q.117.255.117.641m.803.519v-.513q0-.565-.205-.972a1.46 1.46 0 0 0-.589-.63q-.381-.22-.917-.22-.533 0-.92.22a1.44 1.44 0 0 0-.589.627q-.204.406-.205.975v.513q0 .563.205.973.205.406.59.627.386.216.92.216.535 0 .916-.216.383-.22.59-.627.204-.41.204-.973M0 11.926v4h1.459q.603 0 .999-.238a1.45 1.45 0 0 0 .595-.689q.196-.45.196-1.084 0-.63-.196-1.075a1.43 1.43 0 0 0-.59-.68q-.395-.234-1.004-.234zm.791.645h.563q.371 0 .609.152a.9.9 0 0 1 .354.454q.118.302.118.753a2.3 2.3 0 0 1-.068.592 1.1 1.1 0 0 1-.196.422.8.8 0 0 1-.334.252 1.3 1.3 0 0 1-.483.082H.79V12.57Zm7.422.483a1.7 1.7 0 0 0-.103.633v.495q0 .369.103.627a.83.83 0 0 0 .298.393.85.85 0 0 0 .478.131.9.9 0 0 0 .401-.088.7.7 0 0 0 .273-.248.8.8 0 0 0 .117-.364h.765v.076a1.27 1.27 0 0 1-.226.674q-.205.29-.55.454a1.8 1.8 0 0 1-.786.164q-.54 0-.914-.216a1.4 1.4 0 0 1-.571-.627q-.194-.408-.194-.976v-.498q0-.568.197-.978.195-.411.571-.633.378-.223.911-.223.328 0 .607.097.28.093.489.272a1.33 1.33 0 0 1 .466.964v.073H9.78a.85.85 0 0 0-.12-.38.7.7 0 0 0-.273-.261.8.8 0 0 0-.398-.097.8.8 0 0 0-.475.138.87.87 0 0 0-.301.398"/>'
+    };
+  }
+  
+  // Canva
+  if (urlLower.includes("canva.com")) {
+    return {
+      type: "canva",
+      svg: '<path d="M8 2C4.14 2 1 5.13 1 9s3.14 7 7 7 7-3.13 7-7-3.14-7-7-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>'
+    };
+  }
+  
+  // Default for other links
+  return {
+    type: "other",
+    svg: '<path fill-rule="evenodd" d="M14 4.5V14a2 2 0 0 1-2 2v-1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zm-7.839 9.166v.522q0 .384-.117.641a.86.86 0 0 1-.322.387.9.9 0 0 1-.469.126.9.9 0 0 1-.471-.126.87.87 0 0 1-.32-.386 1.55 1.55 0 0 1-.117-.642v-.522q0-.386.117-.641a.87.87 0 0 1 .32-.387.87.87 0 0 1 .471-.129q.264 0 .469.13a.86.86 0 0 1 .322.386q.117.255.117.641m.803.519v-.513q0-.565-.205-.972a1.46 1.46 0 0 0-.589-.63q-.381-.22-.917-.22-.533 0-.92.22a1.44 1.44 0 0 0-.589.627q-.204.406-.205.975v.513q0 .563.205.973.205.406.59.627.386.216.92.216.535 0 .916-.216.383-.22.59-.627.204-.41.204-.973M0 11.926v4h1.459q.603 0 .999-.238a1.45 1.45 0 0 0 .595-.689q.196-.45.196-1.084 0-.63-.196-1.075a1.43 1.43 0 0 0-.59-.68q-.395-.234-1.004-.234zm.791.645h.563q.371 0 .609.152a.9.9 0 0 1 .354.454q.118.302.118.753a2.3 2.3 0 0 1-.068.592 1.1 1.1 0 0 1-.196.422.8.8 0 0 1-.334.252 1.3 1.3 0 0 1-.483.082H.79V12.57Zm7.422.483a1.7 1.7 0 0 0-.103.633v.495q0 .369.103.627a.83.83 0 0 0 .298.393.85.85 0 0 0 .478.131.9.9 0 0 0 .401-.088.7.7 0 0 0 .273-.248.8.8 0 0 0 .117-.364h.765v.076a1.27 1.27 0 0 1-.226.674q-.205.29-.55.454a1.8 1.8 0 0 1-.786.164q-.54 0-.914-.216a1.4 1.4 0 0 1-.571-.627q-.194-.408-.194-.976v-.498q0-.568.197-.978.195-.411.571-.633.378-.223.911-.223.328 0 .607.097.28.093.489.272a1.33 1.33 0 0 1 .466.964v.073H9.78a.85.85 0 0 0-.12-.38.7.7 0 0 0-.273-.261.8.8 0 0 0-.398-.097.8.8 0 0 0-.475.138.87.87 0 0 0-.301.398"/>'
+  };
+}
+
 function displayUserBookings(bookings, container) {
   try {
     if (!container) return;
@@ -297,6 +360,12 @@ function displayUserBookings(bookings, container) {
       const bIpName = booking["B_IP_Name"] ?? "-";
 
       const role = booking["Role"] ?? "-";
+      const taskType = booking["Task Type"] ?? booking["Task type"] ?? "-";
+      const taskName = booking["Task Name"] ?? booking["Task name"] ?? "-";
+      const remark1 = booking["Remark 1"] ?? "-";
+      const remark2 = booking["Remark 2"] ?? "-";
+      const finalStatus = booking["Final Status"] ?? booking["final status"] ?? booking["Final status"] ?? "-";
+      const docLink = booking["Doc Link"] ?? "-";
 
       const rawDate =
         booking["Date"] ??
@@ -333,7 +402,7 @@ function displayUserBookings(bookings, container) {
       const isShootLead = currentUserName && shootLead && 
                           String(currentUserName).trim().toLowerCase() === String(shootLead).trim().toLowerCase();
 
-      // Create booking data JSON string for delete button
+      // Create booking data JSON string for buttons
       const bookingData = {
         bookingId: bookingId,
         shootName: shootName,
@@ -347,34 +416,65 @@ function displayUserBookings(bookings, container) {
         location: location,
         dop: dop,
         cast: cast,
-        noOfShoot: noOfShoot
+        noOfShoot: noOfShoot,
+        taskType: taskType,
+        taskName: taskName,
+        remark1: remark1,
+        finalStatus: finalStatus
       };
       const bookingDataStr = escapeHtml(JSON.stringify(bookingData));
 
-      // Show delete button only if user is the shoot lead
-      const deleteButtonHtml = isShootLead 
-        ? `<button class="delete-booking-btn" data-booking='${bookingDataStr}' title="Delete this booking">
-             🗑️ Delete
-           </button>`
+      // Check if booking is completed
+      const isCompleted = String(finalStatus).trim().toLowerCase() === "completed";
+
+      // Show delete button only if user is the shoot lead AND booking is not completed
+      const deleteButtonHtml = isShootLead && !isCompleted
+        ? `<button class="delete-booking-btn" data-booking='${bookingDataStr}' title="Delete this booking"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/></svg></button>`
         : '';
 
-      // Show edit button only if user is the shoot lead
-      const editButtonHtml = isShootLead 
-        ? `<button class="edit-booking-btn" data-booking='${bookingDataStr}' title="Edit this booking">
-             ✏️ Edit
-           </button>`
+      // Show edit button only if user is the shoot lead AND booking is not completed
+      const editButtonHtml = isShootLead && !isCompleted
+        ? `<button class="edit-booking-btn" data-booking='${bookingDataStr}' title="Edit this booking"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/></svg></button>`
+        : '';
+
+      // Show completed badge if booking is completed
+      const completedBadgeHtml = isCompleted
+        ? `<span class="completed-badge">✓ Completed</span>`
+        : '';
+
+      // Show complete button only if: Task Type = "Post-Production" OR "Pre-Production" AND user is shoot lead AND final_status != "Completed"
+      const taskTypeNormalized = String(taskType).trim().toLowerCase();
+      const completeButtonHtml = ((taskTypeNormalized === "post-production" || taskTypeNormalized === "pre-production") && isShootLead && !isCompleted)
+        ? `<button class="complete-booking-btn" data-booking='${bookingDataStr}' title="Complete this shoot"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16"><path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0"/><path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/></svg></button>`
         : '';
 
       // Show free button only if user is NOT the shoot lead and NOT already freed
       const freeButtonHtml = !isShootLead && !isUserFreed
-        ? `<button class="free-booking-btn" data-booking='${bookingDataStr}' title="Mark this shoot as free">
-             ✓ Free
-           </button>`
+        ? `<button class="free-booking-btn" data-booking='${bookingDataStr}' title="Mark this shoot as free"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg></button>`
         : '';
 
       // Show freed badge if user is freed
       const freedBadgeHtml = isUserFreed
         ? `<span class="freed-badge">Freed</span>`
+        : '';
+
+      // Function to get badge info based on task type
+      function getTaskTypeBadgeInfo(type) {
+        if (!type || type === "-") return { text: "", class: "" };
+        const normalized = String(type).trim().toLowerCase();
+        if (normalized === "pre-production") {
+          return { text: "Pre-Pro", class: "task-type-badge--pre-pro" };
+        } else if (normalized === "post-production") {
+          return { text: "Post-Pro", class: "task-type-badge--post-pro" };
+        } else if (normalized === "shoot") {
+          return { text: "Shoot", class: "task-type-badge--shoot" };
+        }
+        return { text: "", class: "" };
+      }
+
+      const badgeInfo = getTaskTypeBadgeInfo(taskType);
+      const taskTypeBadge = badgeInfo.text
+        ? `<span class="task-type-badge ${badgeInfo.class}">${escapeHtml(badgeInfo.text)}</span>`
         : '';
 
       html += `
@@ -385,51 +485,138 @@ function displayUserBookings(bookings, container) {
               <h4 class="booking-title">${escapeHtml(String(shootName))} · ${escapeHtml(String(bookingType))} · ${escapeHtml(String(bIpName))}</h4>
               ${freedBadgeHtml}
             </div>
-            ${deleteButtonHtml}
-            ${editButtonHtml}
-            ${freeButtonHtml}
+            <div class="booking-header-right">
+              ${isCompleted ? completedBadgeHtml : ''}
+              ${isCompleted ? '' : deleteButtonHtml}
+              ${isCompleted ? '' : editButtonHtml}
+              ${completeButtonHtml}
+              ${freeButtonHtml}
+            </div>
           </div>
 
           <div class="booking-details">
-            <div class="booking-detail-row">
-              <span class="detail-label">Date:</span>
-              <span class="detail-value">${escapeHtml(String(date))}</span>
+            <div class="booking-detail-row booking-detail-row--date-badge">
+              <div>
+                <span class="detail-label">Date:</span>
+                <span class="detail-value">${escapeHtml(String(date))}</span>
+              </div>
+              ${taskTypeBadge}
             </div>
 
-            <div class="booking-detail-row">
-              <span class="detail-label">Time:</span>
-              <span class="detail-value">${escapeHtml(fromTime)} - ${escapeHtml(toTime)}</span>
-            </div>
+            ${(() => {
+              const taskTypeNor = String(taskType).trim().toLowerCase();
+              const isProduction = taskTypeNor === "pre-production" || taskTypeNor === "post-production";
+              
+              if (isProduction) {
+                // For Pre-Production and Post-Production cards
+                const transformedRole = (() => {
+                  const roleNor = String(role).trim().toLowerCase();
+                  if (roleNor === "dop" || roleNor === "cast") {
+                    return "Team";
+                  } else if (roleNor === "shoot lead") {
+                    return "Task Lead";
+                  }
+                  return String(role);
+                })();
 
-            <div class="booking-detail-row">
-              <span class="detail-label">No. of Shoots:</span>
-              <span class="detail-value">${escapeHtml(String(noOfShoot))}</span>
-            </div>
+                const linkIconsHtml = (() => {
+                  if (docLink === "-" || !docLink) return "";
+                  const links = docLink.split(",").map(l => l.trim()).filter(l => l);
+                  return links.map(url => {
+                    const iconInfo = getLinkIconInfo(url);
+                    return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="doc-link-icon doc-link-icon--${iconInfo.type}" title="${iconInfo.type}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">${iconInfo.svg}</svg></a>`;
+                  }).join("");
+                })();
 
-            <div class="booking-detail-row">
-              <span class="detail-label">Your Role:</span>
-              <span class="detail-value">${escapeHtml(String(role))}</span>
-            </div>
+                let productionHtml = `
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Task Name:</span>
+                    <span class="detail-value">${escapeHtml(String(taskName))}</span>
+                  </div>
 
-            <div class="booking-detail-row">
-              <span class="detail-label">Shoot Lead:</span>
-              <span class="detail-value">${escapeHtml(String(shootLead))}</span>
-            </div>
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">${escapeHtml(fromTime)} - ${escapeHtml(toTime)}</span>
+                  </div>
 
-            <div class="booking-detail-row">
-              <span class="detail-label">Location:</span>
-              <span class="detail-value">${escapeHtml(String(location))}</span>
-            </div>
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Task Count:</span>
+                    <span class="detail-value">${escapeHtml(String(noOfShoot))}</span>
+                  </div>
 
-            <div class="booking-detail-row">
-              <span class="detail-label">DOP:</span>
-              <span class="detail-value">${escapeHtml(String(dop))}</span>
-            </div>
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Your Role:</span>
+                    <span class="detail-value">${escapeHtml(transformedRole)}</span>
+                  </div>
 
-            <div class="booking-detail-row">
-              <span class="detail-label">Cast:</span>
-              <span class="detail-value">${escapeHtml(String(cast))}</span>
-            </div>
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Task Lead:</span>
+                    <span class="detail-value">${escapeHtml(String(shootLead))}</span>
+                  </div>
+
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Team:</span>
+                    <span class="detail-value">${escapeHtml(String(cast))}</span>
+                  </div>
+
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Remark 1:</span>
+                    <span class="detail-value">${escapeHtml(String(remark1))}</span>
+                  </div>`;
+                
+                if (isCompleted) {
+                  productionHtml += `
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Remark 2:</span>
+                    <span class="detail-value">${escapeHtml(String(remark2))}</span>
+                  </div>`;
+                }
+                
+                if (linkIconsHtml) {
+                  productionHtml += `<div class="booking-detail-row"><span class="detail-label">Documents:</span><div class="doc-links-container">${linkIconsHtml}</div></div>`;
+                }
+                
+                return productionHtml;
+              } else {
+                // For Shoot cards (original layout)
+                return `
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span class="detail-value">${escapeHtml(fromTime)} - ${escapeHtml(toTime)}</span>
+                  </div>
+
+                  <div class="booking-detail-row">
+                    <span class="detail-label">No. of Shoots:</span>
+                    <span class="detail-value">${escapeHtml(String(noOfShoot))}</span>
+                  </div>
+
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Your Role:</span>
+                    <span class="detail-value">${escapeHtml(String(role))}</span>
+                  </div>
+
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Shoot Lead:</span>
+                    <span class="detail-value">${escapeHtml(String(shootLead))}</span>
+                  </div>
+
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Location:</span>
+                    <span class="detail-value">${escapeHtml(String(location))}</span>
+                  </div>
+
+                  <div class="booking-detail-row">
+                    <span class="detail-label">DOP:</span>
+                    <span class="detail-value">${escapeHtml(String(dop))}</span>
+                  </div>
+
+                  <div class="booking-detail-row">
+                    <span class="detail-label">Cast:</span>
+                    <span class="detail-value">${escapeHtml(String(cast))}</span>
+                  </div>
+                `;
+              }
+            })()}
           </div>
         </div>
       `;
@@ -444,6 +631,8 @@ function displayUserBookings(bookings, container) {
     attachFreeButtonListeners();
     // Attach edit button event listeners
     attachEditButtonListeners();
+    // Attach complete button event listeners
+    attachCompleteButtonListeners();
 
     console.log("✓ Bookings displayed successfully");
   } catch (error) {
@@ -1658,5 +1847,229 @@ async function submitUpdatedBooking(bookingData, editState, removeUsers, addUser
   } catch (error) {
     console.error("❌ Error submitting update:", error);
     UI.showToast("Failed to update booking: " + error.message, "error", 4000);
+  }
+}
+
+// ==================== Complete Booking Modal Functions ====================
+
+function initializeCompleteModal() {
+  const modal = document.getElementById('completeBookingModal');
+  const cancelBtn = document.getElementById('completeModalCancelBtn');
+  const completeBtn = document.getElementById('completeModalCompleteBtn');
+  const addLinkBtn = document.getElementById('addLinkBtn');
+  const remark2Input = document.getElementById('remark2Input');
+  const remark2CharCount = document.getElementById('remark2CharCount');
+
+  // Add character counter for remark2
+  remark2Input?.addEventListener('input', () => {
+    remark2CharCount.textContent = remark2Input.value.length;
+  });
+
+  cancelBtn?.addEventListener('click', closeCompleteModal);
+  completeBtn?.addEventListener('click', submitCompleteBooking);
+  addLinkBtn?.addEventListener('click', addLinkField);
+
+  // Close modal when clicking outside
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeCompleteModal();
+    }
+  });
+}
+
+function attachCompleteButtonListeners() {
+  const completeButtons = document.querySelectorAll('.complete-booking-btn');
+  completeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const bookingDataStr = btn.getAttribute('data-booking');
+      try {
+        const bookingData = JSON.parse(bookingDataStr);
+        openCompleteModal(bookingData);
+      } catch (error) {
+        console.error('Failed to parse booking data:', error);
+      }
+    });
+  });
+}
+
+function openCompleteModal(bookingData) {
+  const modal = document.getElementById('completeBookingModal');
+  
+  // Populate modal with booking details
+  document.getElementById('completeModalShootName').textContent = bookingData.shootName || '-';
+  document.getElementById('completeModalDate').textContent = bookingData.date || '-';
+  
+  // Format time correctly using the same formatTime function
+  const fromTime = formatTime(bookingData.fromTime);
+  const toTime = formatTime(bookingData.toTime);
+  document.getElementById('completeModalTime').textContent = `${fromTime} - ${toTime}`;
+
+  // Clear previous form data
+  document.getElementById('remark2Input').value = '';
+  
+  // Generate only 1 DOL link field initially
+  const dolLinksContainer = document.getElementById('dolLinksContainer');
+  dolLinksContainer.innerHTML = '';
+  
+  const linkDiv = document.createElement('div');
+  linkDiv.className = 'dol-link-item';
+  linkDiv.innerHTML = `
+    <input 
+      type="url" 
+      id="dolLink_1"
+      name="dol-link-1"
+      class="dol-link-input" 
+      placeholder="Enter valid URL (e.g., https://example.com)" 
+    >
+    <button type="button" class="remove-link-btn">✕</button>
+  `;
+  dolLinksContainer.appendChild(linkDiv);
+  
+  // Add remove button listener
+  linkDiv.querySelector('.remove-link-btn').addEventListener('click', () => {
+    linkDiv.remove();
+  });
+
+  // Store booking data for submission
+  window.currentCompleteBookingData = bookingData;
+
+  // Show modal
+  modal.classList.add('modal-open');
+}
+
+function closeCompleteModal() {
+  const modal = document.getElementById('completeBookingModal');
+  modal.classList.remove('modal-open');
+  window.currentCompleteBookingData = null;
+}
+
+function addLinkField() {
+  const dolLinksContainer = document.getElementById('dolLinksContainer');
+  const currentCount = dolLinksContainer.children.length + 1;
+  
+  const linkDiv = document.createElement('div');
+  linkDiv.className = 'dol-link-item';
+  linkDiv.innerHTML = `
+    <input 
+      type="url" 
+      id="dolLink_extra_${currentCount}"
+      name="dol-link-extra-${currentCount}"
+      class="dol-link-input" 
+      placeholder="Enter valid URL (e.g., https://example.com)" 
+    >
+    <button type="button" class="remove-link-btn">✕</button>
+  `;
+  dolLinksContainer.appendChild(linkDiv);
+  
+  // Add remove button listener
+  linkDiv.querySelector('.remove-link-btn').addEventListener('click', () => {
+    linkDiv.remove();
+  });
+}
+
+async function submitCompleteBooking() {
+  const bookingData = window.currentCompleteBookingData;
+  if (!bookingData) {
+    UI.showToast('Booking data not found', 'error', 3000);
+    return;
+  }
+
+  // Get Remark 2
+  const remark2 = document.getElementById('remark2Input').value.trim();
+  if (!remark2) {
+    UI.showToast('Remark 2 is mandatory', 'warning', 3000);
+    return;
+  }
+
+  if (remark2.length > 200) {
+    UI.showToast('Remark 2 cannot exceed 200 characters', 'warning', 3000);
+    return;
+  }
+
+  // Get all DOL links and validate each one
+  const linkInputs = document.querySelectorAll('.dol-link-input');
+  const links = [];
+  let hasInvalidLinks = false;
+
+  linkInputs.forEach((input, index) => {
+    const url = input.value.trim();
+    if (url) {
+      // Validate URL
+      try {
+        new URL(url);
+        links.push(url);
+      } catch (e) {
+        hasInvalidLinks = true;
+        console.error(`Invalid URL in field ${index + 1}: ${url}`);
+        UI.showToast(`Link ${index + 1} is not a valid URL. Please enter a proper link (e.g., https://example.com)`, 'error', 4000);
+      }
+    }
+  });
+
+  // Stop if any invalid links were found
+  if (hasInvalidLinks) {
+    return;
+  }
+
+  try {
+    // Get current user
+    const user = AUTH.getCurrentUser();
+
+    // Prepare payload
+    const payload = {
+      action: 'booking_complete',
+      command: '/complete',
+      user: {
+        name: user?.name || '-',
+        role: user?.role || '-',
+        email: user?.email || '-'
+      },
+      bookingData: {
+        bookingId: bookingData.bookingId,
+        shootName: bookingData.shootName,
+        type: bookingData.type,
+        bIpName: bookingData.bIpName,
+        date: bookingData.date,
+        fromTime: bookingData.fromTime,
+        toTime: bookingData.toTime,
+        role: bookingData.role,
+        creator: bookingData.creator,
+        location: bookingData.location,
+        dop: bookingData.dop,
+        cast: bookingData.cast,
+        noOfShoot: bookingData.noOfShoot,
+        taskType: bookingData.taskType,
+        taskName: bookingData.taskName,
+        remark1: bookingData.remark1,
+        finalStatus: bookingData.finalStatus
+      },
+      completeData: {
+        remark2: remark2,
+        links: links.join(', ')
+      }
+    };
+
+    console.log('📤 Sending complete booking webhook:', payload);
+    UI.showToast('Completing booking...', 'info', 2000);
+
+    // Send webhook
+    const response = await API.postToN8n(payload);
+    console.log('✓ Complete booking response:', response);
+
+    // Show success and reload
+    UI.showToast('Booking completed successfully!', 'success', 3000);
+    closeCompleteModal();
+
+    // Reload bookings after a short delay
+    setTimeout(() => {
+      const user = AUTH.getCurrentUser();
+      const role = user?.role || user?.designation || "creator";
+      const name = user?.name || user?.Name || user?.employee || "";
+      loadUserBookings(name, role);
+    }, 1500);
+
+  } catch (error) {
+    console.error('❌ Error completing booking:', error);
+    UI.showToast('Failed to complete booking: ' + error.message, 'error', 4000);
   }
 }

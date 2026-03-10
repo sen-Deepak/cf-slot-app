@@ -44,13 +44,20 @@ export default async function handler(req, res) {
             google_creators_script_url: process.env.GOOGLE_CREATORS_SCRIPT_URL,
             google_myday_script_url: process.env.GOOGLE_MYDAY_SCRIPT_URL,
             google_brandip_script_url: process.env.GOOGLE_BRANDIP_SCRIPT_URL,
-            google_attendance_script_url: process.env.GOOGLE_ATTENDANCE_SCRIPT_URL
+            google_attendance_script_url: process.env.GOOGLE_ATTENDANCE_SCRIPT_URL,
+            google_admin_data_script_url: process.env.GOOGLE_ADMIN_DATA_SCRIPT_URL,
+            google_employees_script_url: process.env.GOOGLE_EMPLOYEES_SCRIPT_URL
         };
 
-        // Check if any required variables are missing
-        const missingVars = Object.entries(config)
-            .filter(([key, value]) => key !== 'ok' && !value)
-            .map(([key]) => key);
+        // Check if required variables are missing (mark admin and employees as optional)
+        const requiredVars = [
+            'google_creators_script_url',
+            'google_myday_script_url',
+            'google_brandip_script_url',
+            'google_attendance_script_url'
+        ];
+        
+        const missingVars = requiredVars.filter(key => !config[key]);
 
         if (missingVars.length > 0) {
             console.warn('⚠️ Missing environment variables:', missingVars);

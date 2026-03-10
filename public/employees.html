@@ -26,13 +26,43 @@
 
         <!-- Main content -->
         <main class="main-content">
+            <!-- Employees Section -->
             <section class="section">
-                <h2>Employees</h2>
-                <div id="employeesList" class="employees-container">
-                    <p>Loading employees...</p>
+                <div class="employees-header">
+                    <h2>Employees</h2>
+                    
+                    <!-- Date Filter Buttons -->
+                    <div class="date-filter-buttons">
+                        <button id="yesterdayBtn" class="btn btn-secondary date-filter-btn" data-date="yesterday">Yesterday</button>
+                        <button id="todayBtn" class="btn btn-primary date-filter-btn active" data-date="today">Today</button>
+                        <button id="tomorrowBtn" class="btn btn-secondary date-filter-btn" data-date="tomorrow">Tomorrow</button>
+                    </div>
+                </div>
+
+                <div id="employeesLoading" class="loading-spinner hidden"></div>
+                <div id="employeesError" class="error-message"></div>
+                <div id="employeesContainer" class="employees-container">
+                    <p class="placeholder-text">Loading employee data...</p>
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Employee Details Popup Modal -->
+    <div id="employeePopupModal" class="popup-modal hidden">
+        <div class="popup-overlay"></div>
+        <div class="popup-container">
+            <div class="popup-header">
+                <h3 id="popupEmployeeName">Employee Name</h3>
+                <button class="popup-close-btn">&times;</button>
+            </div>
+
+            <!-- Shoot Count Summary -->
+            <div id="popupShootSummary" class="popup-shoot-summary"></div>
+
+            <!-- Employee Details Cards -->
+            <div id="popupDetailsContainer" class="popup-details-container"></div>
+        </div>
     </div>
 
     <!-- Scripts -->

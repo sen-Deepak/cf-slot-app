@@ -573,7 +573,8 @@ const server = http.createServer(async (req, res) => {
             google_myday_script_url: process.env.GOOGLE_MYDAY_SCRIPT_URL,
             google_brandip_script_url: process.env.GOOGLE_BRANDIP_SCRIPT_URL,
             google_attendance_script_url: process.env.GOOGLE_ATTENDANCE_SCRIPT_URL,
-            google_admin_data_script_url: process.env.GOOGLE_ADMIN_DATA_SCRIPT_URL
+            google_admin_data_script_url: process.env.GOOGLE_ADMIN_DATA_SCRIPT_URL,
+            google_employees_script_url: process.env.GOOGLE_EMPLOYEES_SCRIPT_URL
         };
         res.writeHead(200, { 
             'Content-Type': 'application/json',

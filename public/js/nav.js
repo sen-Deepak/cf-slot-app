@@ -18,6 +18,7 @@ const NAV = {
         ],
         nonAdmin: [
             { name: 'Slot Booking', url: '/booking.html' },
+            { name: 'Pre/Post', url: '/prepost.html' },
             { name: 'Slot Check', url: '/slot-check.html' },
             { name: 'My Day', url: '/my-day.html' },
             { name: 'Attendance', url: '/attendance.html' }

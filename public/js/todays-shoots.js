@@ -46,14 +46,12 @@ async function loadPageData() {
         const shoots = await ADMIN_API.getTodaysShoots();
 
         if (shoots.length === 0) {
-            document.getElementById('shootsList').innerHTML = '<p style="color: #999; text-align: center;">No shoots scheduled for today</p>';
             document.getElementById('bookingCount').textContent = '0';
             document.getElementById('videoCount').textContent = '0';
             document.getElementById('brandIpTableBody').innerHTML = '<tr><td colspan="3" style="text-align: center; color: #999;">No data</td></tr>';
         } else {
             // Load brand/IP section when shoots exist
             loadBrandIpSection(shoots);
-            loadShootsSchedule(shoots);
         }
 
         // Load all sections - these can run independently
@@ -62,7 +60,6 @@ async function loadPageData() {
 
     } catch (error) {
         console.error('Error loading page data:', error);
-        document.getElementById('shootsList').innerHTML = '<p style="color: #e74c3c;">Error loading shoots data</p>';
     }
 }
 

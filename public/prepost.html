@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre/Post Production - CreativeFuel</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header: top row = logo + logout, bottom row = page tabs -->
+        <header class="header">
+            <div class="header-top-row">
+                <a href="/booking.html" class="header-logo-link">
+                    <img src="/images/screenshot-removebg.png" alt="CreativeFuel" class="header-logo">
+                </a>
+                <span id="userNameDisplay" class="header-username"></span>
+                <button id="logoutBtn" class="btn btn-small btn-secondary">Logout</button>
+            </div>
+            <nav class="tabs-container">
+                <div class="tabs">
+                    <!-- Tabs will be dynamically rendered by nav.js -->
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main content -->
+        <main class="main-content">
+            <!-- Date & Time Selection (compact) -->
+            <section class="section section--compact">
+                <h2>Select Date & Time</h2>
+
+                <!-- Date: Today | Tomorrow | Day After (horizontal, compact) -->
+                <div class="date-selector">
+                    <div class="button-group date-button-group">
+                        <button type="button" class="date-btn" data-offset="0">Today</button>
+                        <button type="button" class="date-btn" data-offset="1">Tomorrow</button>
+                        <button type="button" class="date-btn" data-offset="2">Day After</button>
+                    </div>
+                </div>
+
+                <!-- From Time | To Time (side by side) -->
+                <div class="time-selection">
+                    <div class="form-group form-group--inline">
+                        <label for="fromTime">From</label>
+                        <select id="fromTime" class="time-select">
+                            <option value="">Start</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group--inline">
+                        <label for="toTime">To</label>
+                        <select id="toTime" class="time-select">
+                            <option value="">End</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Date + Duration summary (one compact line) -->
+                <div class="date-duration-row">
+                    <span id="selectedDateDisplay" class="date-display">Select a date</span>
+                    <span id="durationInfo" class="duration-info"></span>
+                </div>
+
+                <!-- Lock Button -->
+                <button id="lockBtn" class="btn btn-primary btn-lg" disabled>
+                    🔒 Lock Date & Time
+                </button>
+                <div id="lockError" class="error-message"></div>
+                <div id="lockSuccess" class="success-message"></div>
+                <div id="lockLoading" class="loading-spinner hidden"></div>
+            </section>
+
+            <!-- Booking Details (hidden until lock success) -->
+            <section id="bookingDetailsSection" class="section">
+                <h2>Booking Details</h2>
+
+                <!-- Pre-Production vs Post-Production Toggle -->
+                <div class="form-group">
+                    <label>Production Stage *</label>
+                    <div class="toggle-buttons" id="productionStageToggle">
+                        <button type="button" class="toggle-btn active" data-option="preproduction">
+                            Pre-Production
+                        </button>
+                        <button type="button" class="toggle-btn" data-option="postproduction">
+                            Post-Production
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pre-Production Dropdown -->
+                <div class="form-group" id="preproductionGroup">
+                    <label for="preproductionDropdown">Pre-Production *</label>
+                    <select id="preproductionDropdown" disabled>
+                        <option value="">Loading options...</option>
+                    </select>
+                </div>
+
+                <!-- Post-Production Dropdown -->
+                <div class="form-group hidden" id="postproductionGroup">
+                    <label for="postproductionDropdown">Post-Production *</label>
+                    <select id="postproductionDropdown" disabled>
+                        <option value="">Loading options...</option>
+                    </select>
+                </div>
+
+                <!-- Brand vs IP vs Campaign Toggle -->
+                <div class="form-group">
+                    <label>Brand / IP / Campaign *</label>
+                    <div class="toggle-buttons" id="brandIpCampaignToggle">
+                        <button type="button" class="toggle-btn active" data-option="brand">
+                            Brand
+                        </button>
+                        <button type="button" class="toggle-btn" data-option="ip">
+                            IP
+                        </button>
+                        <button type="button" class="toggle-btn" data-option="campaign">
+                            Campaign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Brand Dropdown -->
+                <div class="form-group" id="brandGroup">
+                    <label for="brand">Brand *</label>
+                    <select id="brand" disabled>
+                        <option value="">Loading brands...</option>
+                    </select>
+                </div>
+
+                <!-- IP Dropdown -->
+                <div class="form-group hidden" id="ipGroup">
+                    <label for="ip">IP *</label>
+                    <select id="ip" disabled>
+                        <option value="">Loading IPs...</option>
+                    </select>
+                </div>
+
+                <!-- Campaign Dropdown -->
+                <div class="form-group hidden" id="campaignGroup">
+                    <label for="campaign">Campaign *</label>
+                    <select id="campaign" disabled>
+                        <option value="">Loading campaigns...</option>
+                    </select>
+                </div>
+
+                <!-- Work Name (mandatory) -->
+                <div class="form-group">
+                    <label for="workName">Work Name *</label>
+                    <input 
+                        type="text" 
+                        id="workName" 
+                        placeholder="e.g., Product Photography"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <!-- Number and Remark (inline) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- Number Dropdown -->
+                    <div class="form-group">
+                        <label for="numberField">Number</label>
+                        <select id="numberField">
+                            <option value="">Select number</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+
+                    <!-- Remark (optional) -->
+                    <div class="form-group">
+                        <label for="remark">Remark</label>
+                        <textarea 
+                            id="remark" 
+                            placeholder="Any additional notes..."
+                            rows="3"
+                            autocomplete="off"
+                        ></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DOP Selection (visible, empty until lock success) -->
+            <section id="dopSection" class="section">
+                <h2>Select DOP</h2>
+                <div id="dopCheckboxes" class="checkbox-group">
+                    <!-- Populated after lock success -->
+                </div>
+            </section>
+
+            <!-- Cast Selection (visible, empty until lock success) -->
+            <section id="castSection" class="section">
+                <h2>Select Cast</h2>
+                <div id="castCheckboxes" class="checkbox-group">
+                    <!-- Populated after lock success -->
+                </div>
+            </section>
+
+            <!-- Submit Button (hidden until lock success) -->
+            <section id="submitSection" class="section hidden">
+                <button id="submitBookingBtn" class="btn btn-primary btn-lg">
+                    ✅ Submit Booking
+                </button>
+                <div id="submitError" class="error-message"></div>
+                <div id="submitLoading" class="loading-spinner hidden"></div>
+            </section>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message hidden">
+                <p>✅ Pre/Post Production booking successfully done!</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Version Info Footer -->
+    <div id="version-footer"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="/js/auth.js"></script>
+    <script type="module" src="/js/nav.js"></script>
+    <script type="module" src="/js/prepost.js"></script>
+</body>
+</html>

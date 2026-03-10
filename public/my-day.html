@@ -134,6 +134,52 @@
         </div>
     </div>
 
+    <!-- Complete Booking Modal -->
+    <div id="completeBookingModal" class="modal-overlay">
+        <div class="modal-content complete-modal-content">
+            <h2 class="modal-title">Complete Shoot</h2>
+            
+            <div id="completeBookingDetails" class="booking-details-preview">
+                <p><strong>Shoot:</strong> <span id="completeModalShootName">-</span></p>
+                <p><strong>Date:</strong> <span id="completeModalDate">-</span></p>
+                <p><strong>Time:</strong> <span id="completeModalTime">-</span></p>
+            </div>
+
+            <div class="complete-modal-body">
+                <!-- Remark 2 (mandatory) -->
+                <div class="form-group">
+                    <label for="remark2Input" class="remark2-label">
+                        Remark 2 <span class="required-star">*</span>
+                    </label>
+                    <textarea 
+                        id="remark2Input" 
+                        class="remark2-input" 
+                        placeholder="Enter your remarks..." 
+                        rows="4"
+                        maxlength="200">
+                    </textarea>
+                    <div class="char-count">
+                        <span id="remark2CharCount">0</span>/200
+                    </div>
+                </div>
+
+                <!-- DOL Links (dynamic based on No of Shoot) -->
+                <div class="form-group">
+                    <label class="dol-links-label">DOL Links</label>
+                    <div id="dolLinksContainer" class="dol-links-container">
+                        <!-- Links will be generated dynamically -->
+                    </div>
+                    <button type="button" id="addLinkBtn" class="btn btn-secondary btn-small">+ Add Link</button>
+                </div>
+            </div>
+
+            <div class="modal-button-group">
+                <button id="completeModalCancelBtn" class="btn btn-secondary modal-btn">Cancel</button>
+                <button id="completeModalCompleteBtn" class="btn btn-success modal-btn">Complete</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Version Info Footer -->
     <div id="version-footer"></div>
 
