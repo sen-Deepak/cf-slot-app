@@ -7,10 +7,6 @@
 import { fetchWithTimeout } from './fetch-util.js';
 import { AUTH } from './auth.js';
 import { UI } from './ui.js';
-import { getConfig } from './config.js';
-
-let EMPLOYEES_API_ENDPOINT = null;
-const BOOKING_API_KEY = 'bookingkey';
 
 let employeesState = {
   allData: [],
@@ -20,20 +16,6 @@ let employeesState = {
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!AUTH.isAuthenticated()) return;
-  
-  EMPLOYEES_API_ENDPOINT = await getConfig('google_employees_script_url');
-  if (!EMPLOYEES_API_ENDPOINT) {
-    console.error('❌ EMPLOYEES_API_ENDPOINT not configured');
-    const container = document.getElementById('employeesContainer');
-    const errorDiv = document.getElementById('employeesError');
-    if (container) {
-      container.innerHTML = '<p class="placeholder-text">Configuration error: Employees API not available</p>';
-    }
-    if (errorDiv) {
-      UI.showError(errorDiv, 'Failed to load employees API configuration. Please contact administrator.');
-    }
-    return;
-  }
   
   initializePage();
   await loadEmployeesData();
@@ -101,11 +83,10 @@ async function loadEmployeesData() {
     UI.showError(errorDiv, '');
     UI.setLoading(loadingSpinner, true);
 
-    // Fetch from Google API
-    const apiUrl = EMPLOYEES_API_ENDPOINT + '?key=' + encodeURIComponent(BOOKING_API_KEY);
-    console.log('🔍 Fetching employees data from:', apiUrl);
+    // Fetch from server proxy endpoint (secure, no CORS issues)
+    console.log('🔍 Fetching employees data from server proxy...');
 
-    const response = await fetchWithTimeout(apiUrl, { method: 'GET' });
+    const response = await fetchWithTimeout('/api/employees', { method: 'GET' });
 
     if (!response.ok) {
       throw new Error(`API returned status ${response.status}`);

@@ -50,7 +50,7 @@ loadEnv();
 
 // ...existing code...
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const HOST = '0.0.0.0';
 
 const MIME_TYPES = {
@@ -94,6 +94,57 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/favicon.ico') {
         res.writeHead(204); // 204 No Content
         res.end();
+        return;
+    }
+
+    // Handle /api/employees GET request (proxy to Google employees script)
+    if (pathname === '/api/employees' && req.method === 'GET') {
+        console.log('✅ Matched /api/employees endpoint');
+        
+        try {
+            const GOOGLE_EMPLOYEES_SCRIPT_URL = process.env.GOOGLE_EMPLOYEES_SCRIPT_URL;
+            if (!GOOGLE_EMPLOYEES_SCRIPT_URL) {
+                throw new Error('GOOGLE_EMPLOYEES_SCRIPT_URL not configured');
+            }
+            
+            // Build URL with API key (kept on server-side only)
+            const apiKey = process.env.APP_KEY || 'bookingkey';
+            const googleUrl = `${GOOGLE_EMPLOYEES_SCRIPT_URL}?key=${encodeURIComponent(apiKey)}`;
+            
+            console.log(`📥 Fetching employees data from Google Apps Script...`);
+            
+            const fetch_response = await fetch(googleUrl, {
+                method: 'GET',
+                mode: 'cors',
+                timeout: 30000
+            });
+
+            const responseText = await fetch_response.text();
+            console.log(`   Status: ${fetch_response.status}`);
+            console.log(`   Response length: ${responseText.length} bytes`);
+            
+            // Parse response
+            let responseData;
+            try {
+                responseData = JSON.parse(responseText);
+            } catch (e) {
+                // If not JSON, return as empty array
+                console.warn('   ⚠️  Response is not JSON, returning as array');
+                responseData = [];
+            }
+
+            res.writeHead(fetch_response.status, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(responseData));
+            console.log(`✓ Employees data fetched successfully\n`);
+
+        } catch (error) {
+            console.error(`❌ Error: ${error.message}`);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                ok: false,
+                message: 'Failed to fetch employees data'
+            }));
+        }
         return;
     }
 
