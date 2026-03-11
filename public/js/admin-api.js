@@ -45,9 +45,11 @@ const ADMIN_API = {
      * @returns {Promise<array>} array of shoot objects
      */
     async getShootsByDate(dateISO) {
+        if (!this.apiUrl) await this.init();
+
         try {
-            // Use server proxy to avoid CORS issues
-            const url = `/api/admin-shoots?action=list&date=${encodeURIComponent(dateISO)}`;
+            // Call Google Apps Script directly (no CORS issues from Google)
+            const url = `${this.apiUrl}?action=list&date=${encodeURIComponent(dateISO)}`;
             console.log('📡 Fetching shoots for date:', dateISO);
 
             const response = await fetchWithTimeout(url, {
