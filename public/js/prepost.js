@@ -722,11 +722,12 @@ function updateSubmitButtonState() {
 
     const workName = document.getElementById('workName').value.trim();
 
+    // At least one name must be selected from either DOP or Cast list
     const allFieldsFilled = 
         productionStageValue && 
         brandIpCampaignValue && 
         workName && 
-        prepostState.selectedDops.size > 0;
+        (prepostState.selectedDops.size > 0 || prepostState.selectedCast.size > 0);
 
     submitBtn.disabled = !allFieldsFilled;
 }

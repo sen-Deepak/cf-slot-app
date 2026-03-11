@@ -112,9 +112,35 @@ function loadShootsSchedule(shoots) {
     }
 
     const HOUR_HEIGHT = 80;
-    const START_HOUR = 8;
     const END_HOUR = 22;
     const GAP = 2;
+
+    // Calculate dynamic START_HOUR based on earliest shoot time
+    // If earliest shoot is before 10am, start from that time; otherwise start from 10am
+    const t2m = (timeStr) => {
+        if (!timeStr) return 0;
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + (minutes || 0);
+    };
+
+    const getEarliestStartHour = () => {
+        let earliestMinutes = 10 * 60; // Default to 10am (600 minutes)
+        
+        shoots.forEach(shoot => {
+            const fromTime = shoot['From Time'];
+            if (fromTime) {
+                const minutes = t2m(fromTime);
+                const hours = Math.floor(minutes / 60);
+                if (hours < 10) {
+                    earliestMinutes = Math.min(earliestMinutes, minutes);
+                }
+            }
+        });
+
+        return Math.floor(earliestMinutes / 60);
+    };
+
+    const START_HOUR = getEarliestStartHour();
 
     // Color palette - 10 colors
     const COLOR_PALETTE = [
@@ -140,12 +166,6 @@ function loadShootsSchedule(shoots) {
     };
 
     // Utility functions
-    const t2m = (timeStr) => {
-        if (!timeStr) return 0;
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return hours * 60 + (minutes || 0);
-    };
-
     const m2px = (minutes) => ((minutes - START_HOUR * 60) / 60) * HOUR_HEIGHT;
     
     const getDuration = (startTime, endTime) => {
