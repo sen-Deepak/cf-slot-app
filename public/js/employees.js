@@ -7,6 +7,7 @@
 import { fetchWithTimeout } from './fetch-util.js';
 import { AUTH } from './auth.js';
 import { UI } from './ui.js';
+import { getConfig } from './config.js';
 
 let employeesState = {
   allData: [],
@@ -83,10 +84,15 @@ async function loadEmployeesData() {
     UI.showError(errorDiv, '');
     UI.setLoading(loadingSpinner, true);
 
-    // Fetch from server proxy endpoint (secure, no CORS issues)
-    console.log('🔍 Fetching employees data from server proxy...');
+    // Fetch directly from Google Apps Script (no proxy)
+    console.log('🔍 Fetching employees data directly from Google Apps Script...');
 
-    const response = await fetchWithTimeout('/api/employees', { method: 'GET' });
+    const googleEmployeesUrl = await getConfig('google_employees_script_url');
+    if (!googleEmployeesUrl) {
+      throw new Error('Google Employees Script URL not configured');
+    }
+
+    const response = await fetchWithTimeout(googleEmployeesUrl, { method: 'GET' });
 
     if (!response.ok) {
       throw new Error(`API returned status ${response.status}`);
