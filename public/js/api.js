@@ -1,7 +1,7 @@
 import { fetchWithTimeout } from './fetch-util.js';
 
 /**
- * api.js - API communication with backend
+ * api.js - API communication with backend endpoints
  */
 
 const API = {
