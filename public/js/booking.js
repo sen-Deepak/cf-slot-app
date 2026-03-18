@@ -21,11 +21,11 @@ let bookingState = {
     selectedCast: new Set(),
     brandOrIp: 'brand',  // Track which option is selected
     brandList: [],  // List of available brands
-    ipList: []  // List of available IPs
+    ipList: [],  // List of available IPs
+    hasConflict: false  // Track if there's a slot conflict
 };
 
 let bookingSubmitInFlight = false;
-let employeeSelectionTimeout = null;  // Track timeout for employee selection 90-second timer
 
 document.addEventListener('DOMContentLoaded', () => {
     // Check auth first
@@ -378,15 +378,10 @@ async function lockDateAndTime() {
         // Check if response is "Ongoing Booking" (someone is currently booking)
         // Response format: {"key":"Ongoing Booking"}
         if (response?.key === "Ongoing Booking") {
-            const msg = 'someone else is booking try after 90 sec';
+            const msg = 'Someone else is currently booking. Please try again in a moment.';
             UI.showError(lockError, msg);
             if (lockSuccess) lockSuccess.classList.remove('show');
             lockError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
-            // Auto-refresh after 90 seconds
-            setTimeout(() => {
-                window.location.reload();
-            }, 90000);
             
             UI.setLoading(lockLoading, false);
             lockBtn.disabled = false;
@@ -448,15 +443,6 @@ async function lockDateAndTime() {
         renderCastCheckboxes();
         document.getElementById('submitSection').classList.remove('hidden');
 
-        // Start 90-second timer - if user doesn't submit within 90 seconds, refresh page
-        if (employeeSelectionTimeout) {
-            clearTimeout(employeeSelectionTimeout);
-        }
-        employeeSelectionTimeout = setTimeout(() => {
-            console.log('90 seconds passed without booking submission - refreshing page');
-            window.location.reload();
-        }, 90000);
-
         // Show success message below button
         if (lockSuccess) {
             lockSuccess.textContent = 'List successfully loaded';
@@ -473,6 +459,113 @@ async function lockDateAndTime() {
             lockBtn.disabled = false;
         }
     }
+}
+
+function clearConflict() {
+    /**
+     * Clear conflict state and hide conflict message
+     * Re-enable submit button for retry
+     */
+    bookingState.hasConflict = false;
+    
+    const conflictMessageDiv = document.getElementById('conflictMessage');
+    const submitBtn = document.getElementById('submitBookingBtn');
+    
+    if (conflictMessageDiv) {
+        conflictMessageDiv.classList.add('hidden');
+        conflictMessageDiv.classList.remove('show');
+    }
+    
+    if (submitBtn) {
+        submitBtn.disabled = false;
+    }
+}
+
+function isConflictResponse(data) {
+    /**
+     * Check if API response is a conflict (slot booking conflict)
+     * Conflict response has structure: { message: [...] } or array with message field
+     */
+    if (!data) return false;
+    
+    // Handle array response
+    if (Array.isArray(data) && data.length > 0 && data[0].message) {
+        return true;
+    }
+    
+    // Handle object response
+    if (data.message && Array.isArray(data.message) && data.message.length > 0) {
+        return true;
+    }
+    
+    return false;
+}
+
+function showConflictMessage(data) {
+    /**
+     * Display conflict message to user in formatted way
+     * Parse message to show each person on new line with times in 12-hour format
+     * Keep all form data, disable submit button until user changes selection
+     */
+    bookingState.hasConflict = true;
+    
+    const conflictDiv = document.getElementById('conflictMessage');
+    const contentDiv = document.getElementById('conflictMessageContent');
+    const submitBtn = document.getElementById('submitBookingBtn');
+    
+    // Extract message array
+    let messages = [];
+    if (Array.isArray(data) && data.length > 0 && data[0].message) {
+        messages = data[0].message;
+    } else if (data.message && Array.isArray(data.message)) {
+        messages = data.message;
+    }
+    
+    // Format message - parse and convert times to 12-hour format
+    let messageHtml = '';
+    messages.forEach((msg) => {
+        // Parse message format: "Name1: 20:00, 20:30 | Name2: 20:00, 20:30"
+        // Split by " | " to get individual people
+        const entries = msg.split(' | ');
+        
+        // Format each person with converted times
+        const formattedEntries = entries.map(entry => {
+            const [name, timesStr] = entry.split(': ');
+            if (!name || !timesStr) return entry;  // Return as-is if format doesn't match
+            
+            // Split times by ", " and convert each to 12-hour format
+            const times = timesStr.split(', ');
+            const convertedTimes = times.map(time => {
+                return UI.formatTimeToAmPm(time.trim());
+            }).join(', ');
+            
+            return `${name}: ${convertedTimes}`;
+        }).join('<br>');
+        
+        messageHtml += `<p>${formattedEntries}</p>`;
+    });
+    
+    if (contentDiv) {
+        contentDiv.innerHTML = messageHtml;
+    }
+    
+    // Update instruction text
+    const instructionDiv = document.querySelector('.conflict-instruction');
+    if (instructionDiv) {
+        instructionDiv.textContent = 'Please reselect your cast, dop and resubmit.';
+    }
+    
+    // Show conflict message and disable button
+    if (conflictDiv) {
+        conflictDiv.classList.remove('hidden');
+        conflictDiv.classList.add('show');
+    }
+    
+    if (submitBtn) {
+        submitBtn.disabled = true;
+    }
+    
+    console.log('Conflict message displayed:', messages);
 }
 
 function renderDopCheckboxes() {
@@ -503,6 +596,7 @@ function renderDopCheckboxes() {
                 bookingState.selectedDops.delete(dopName);
                 console.log('Deselected DOP:', dopName);
             }
+            clearConflict();  // Clear any conflict message when user changes selection
             updateCastCheckboxesAvailability();
             updateSubmitButtonState();
         });
@@ -560,6 +654,7 @@ function renderCastCheckboxes() {
                 bookingState.selectedCast.delete(checkbox.value);
                 console.log('Deselected from cast:', checkbox.value);
             }
+            clearConflict();  // Clear any conflict message when user changes selection
             updateSubmitButtonState();
         });
 
@@ -598,12 +693,6 @@ function resetLock() {
     bookingState.castList = [];
     bookingState.selectedDops = new Set();
     bookingState.selectedCast = new Set();
-
-    // Clear the 90-second timeout
-    if (employeeSelectionTimeout) {
-        clearTimeout(employeeSelectionTimeout);
-        employeeSelectionTimeout = null;
-    }
 
     // Keep form visible but clear DOP and cast checkboxes and submit button
     document.getElementById('dopCheckboxes').innerHTML = '';
@@ -739,12 +828,13 @@ async function submitBooking() {
         payload.request_id = request_id;
 
         // Call API
-        await API.postToN8n(payload);
+        const response = await API.postToN8n(payload);
 
-        // Clear the 90-second timeout since booking was submitted successfully
-        if (employeeSelectionTimeout) {
-            clearTimeout(employeeSelectionTimeout);
-            employeeSelectionTimeout = null;
+        // Check if response is a conflict
+        if (isConflictResponse(response)) {
+            // Show conflict message but keep data on form
+            showConflictMessage(response);
+            return;  // Return early, don't clear form
         }
 
         // Success
@@ -760,7 +850,11 @@ async function submitBooking() {
         UI.showToast('Submission failed', 'error', 3000);
     } finally {
         UI.setLoading(submitLoading, false);
-        submitBtn.disabled = false;
+        // Only enable submit button if there's no conflict
+        // (conflict keeps button disabled until user changes selection)
+        if (!bookingState.hasConflict) {
+            submitBtn.disabled = false;
+        }
         bookingSubmitInFlight = false;
     }
 }

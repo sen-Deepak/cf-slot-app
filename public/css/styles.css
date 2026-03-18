@@ -1283,6 +1283,43 @@ input::placeholder {
     animation: slideInUp 0.5s ease-out;
 }
 
+.conflict-message {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background-color: rgba(230, 81, 0, 0.1);
+    color: var(--color-warning);
+    border: 1px solid rgba(230, 81, 0, 0.3);
+    border-radius: var(--radius-md);
+    display: none;
+}
+
+.conflict-message.show {
+    display: block;
+}
+
+.conflict-title {
+    font-weight: 600;
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 1rem;
+}
+
+.conflict-content {
+    margin: var(--spacing-md) 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.conflict-content p {
+    margin: 0.5rem 0;
+}
+
+.conflict-instruction {
+    margin: var(--spacing-md) 0 0 0;
+    font-size: 0.85rem;
+    font-style: italic;
+    opacity: 0.9;
+}
+
 .result-box {
     margin-top: 0;
     padding: 0;
