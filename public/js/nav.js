@@ -7,7 +7,8 @@ const NAV = {
     /**
      * Page configuration based on user role
      * Admin pages: Today's Shoots, Tomorrow Shoots, Live, Employees
-     * Non-admin pages: Slot Booking, Slot Check, My Day, Attendance, Booking
+     * Creator/DOP pages: Slot Booking, Pre/Post, Live, Slot Check, My Day, Attendance
+     * Other pages: Slot Booking, Pre/Post, Slot Check, My Day, Attendance
      */
     pages: {
         admin: [
@@ -15,6 +16,44 @@ const NAV = {
             { name: 'Tomorrow Shoots', url: '/tomorrow-shoots.html' },
             { name: 'Live', url: '/live.html' },
             { name: 'Employees', url: '/employees.html' }
+        ],
+        Admin: [
+            { name: 'Today Shoots', url: '/todays-shoots.html' },
+            { name: 'Tomorrow Shoots', url: '/tomorrow-shoots.html' },
+            { name: 'Live', url: '/live.html' },
+            { name: 'Employees', url: '/employees.html' }
+        ],
+        creator: [
+            { name: 'Slot Booking', url: '/booking.html' },
+            { name: 'Pre/Post', url: '/prepost.html' },
+            { name: 'Live', url: '/live.html' },
+            { name: 'Slot Check', url: '/slot-check.html' },
+            { name: 'My Day', url: '/my-day.html' },
+            { name: 'Attendance', url: '/attendance.html' }
+        ],
+        Creator: [
+            { name: 'Slot Booking', url: '/booking.html' },
+            { name: 'Pre/Post', url: '/prepost.html' },
+            { name: 'Live', url: '/live.html' },
+            { name: 'Slot Check', url: '/slot-check.html' },
+            { name: 'My Day', url: '/my-day.html' },
+            { name: 'Attendance', url: '/attendance.html' }
+        ],
+        dop: [
+            { name: 'Slot Booking', url: '/booking.html' },
+            { name: 'Pre/Post', url: '/prepost.html' },
+            { name: 'Live', url: '/live.html' },
+            { name: 'Slot Check', url: '/slot-check.html' },
+            { name: 'My Day', url: '/my-day.html' },
+            { name: 'Attendance', url: '/attendance.html' }
+        ],
+        DOP: [
+            { name: 'Slot Booking', url: '/booking.html' },
+            { name: 'Pre/Post', url: '/prepost.html' },
+            { name: 'Live', url: '/live.html' },
+            { name: 'Slot Check', url: '/slot-check.html' },
+            { name: 'My Day', url: '/my-day.html' },
+            { name: 'Attendance', url: '/attendance.html' }
         ],
         nonAdmin: [
             { name: 'Slot Booking', url: '/booking.html' },
@@ -33,8 +72,25 @@ const NAV = {
         const user = this.getCurrentUser();
         if (!user) return [];
         
-        const isAdmin = user.role === 'Admin';
-        return isAdmin ? this.pages.admin : this.pages.nonAdmin;
+        const role = user.role;
+        console.log('🔍 NAV.getVisiblePages() - User role:', role, 'Type:', typeof role);
+        console.log('🔍 Available role configs:', Object.keys(this.pages));
+        
+        // Try exact match first
+        if (this.pages[role]) {
+            console.log('✅ Found pages for role:', role);
+            return this.pages[role];
+        }
+        
+        // Try lowercase match
+        const lowerRole = role?.toLowerCase();
+        if (this.pages[lowerRole]) {
+            console.log('✅ Found pages for role (lowercase):', lowerRole);
+            return this.pages[lowerRole];
+        }
+        
+        console.log('⚠️ No pages found for role, using nonAdmin as fallback');
+        return this.pages.nonAdmin;
     },
 
     /**
