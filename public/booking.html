@@ -28,12 +28,19 @@
         <main class="main-content">
             <!-- Date & Time Selection (compact) -->
             <section class="section section--compact">
-                <h2>Select Date & Time</h2>
+                <div class="date-time-header">
+                    <h2>Select Date & Time</h2>
+                    <!-- Booking Mode Toggle (Admin Only) -->
+                    <div id="bookingModeToggle" class="booking-mode-toggle hidden">
+                        <button type="button" class="booking-mode-btn active" data-mode="me">Me</button>
+                        <button type="button" class="booking-mode-btn" data-mode="other">Other</button>
+                    </div>
+                </div>
 
                 <!-- Date: Today | Tomorrow | Day After (horizontal, compact) -->
                 <div class="date-selector">
                     <div class="button-group date-button-group">
-                        <button type="button" class="date-btn" data-offset="0">Today</button>
+                        <button type="button" class="date-btn" id="todayBtn" data-offset="0">Today</button>
                         <button type="button" class="date-btn" data-offset="1">Tomorrow</button>
                         <button type="button" class="date-btn" data-offset="2">Day After</button>
                     </div>

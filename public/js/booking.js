@@ -22,7 +22,9 @@ let bookingState = {
     brandOrIp: 'brand',  // Track which option is selected
     brandList: [],  // List of available brands
     ipList: [],  // List of available IPs
-    hasConflict: false  // Track if there's a slot conflict
+    hasConflict: false,  // Track if there's a slot conflict
+    bookingMode: 'me',  // 'me' or 'other' - for admin only
+    firstSelectedCreator: null  // Track first selected creator in 'other' mode
 };
 
 let bookingSubmitInFlight = false;
@@ -30,13 +32,6 @@ let bookingSubmitInFlight = false;
 document.addEventListener('DOMContentLoaded', () => {
     // Check auth first
     if (!AUTH.isAuthenticated()) {
-        return;
-    }
-
-    // Check if user is admin - if so, redirect to admin dashboard
-    const user = AUTH.getCurrentUser();
-    if (user && user.role === 'Admin') {
-        window.location.href = '/todays-shoots.html';
         return;
     }
 
@@ -62,6 +57,49 @@ function initializePage() {
             userNameDisplay.textContent = "hii "+ firstName;
         }
     }
+
+    // Initialize booking mode toggle (admin only)
+    const isAdmin = user && (user.role === 'Admin' || user.role === 'admin');
+    const bookingModeToggle = document.getElementById('bookingModeToggle');
+    if (isAdmin && bookingModeToggle) {
+        bookingModeToggle.classList.remove('hidden');
+        setupBookingModeToggle();
+    }
+
+    // Show/Hide Today button based on time - only for non-admins
+    // Show: 12:00 AM to 5:59 AM | Hide: 6:00 AM onwards
+    const todayBtn = document.getElementById('todayBtn');
+    if (todayBtn) {
+        const now = new Date();
+        const currentHour = now.getHours();
+        
+        if (!isAdmin) {
+            // Non-admin: show only between midnight and 5:59 AM
+            if (currentHour >= 6) {
+                todayBtn.style.display = 'none';
+                console.log('📅 Today button hidden for non-admin user (after 6:00 AM)');
+            } else {
+                todayBtn.style.display = 'block';
+                console.log('📅 Today button visible for non-admin user (12:00 AM - 5:59 AM)');
+            }
+        } else {
+            // Admin: always show Today button
+            todayBtn.style.display = 'block';
+            console.log('📅 Today button visible for admin user (all times)');
+        }
+    }
+}
+
+function extractCreatorName(fullName) {
+    /**
+     * Extract only the name part from creator string
+     * e.g., "Yuvraj Singh Solanki - Creator" -> "Yuvraj Singh Solanki"
+     * or "Deepak - DOP" -> "Deepak"
+     */
+    if (fullName.includes(' - ')) {
+        return fullName.split(' - ')[0].trim();
+    }
+    return fullName.trim();
 }
 
 function generateTimeOptions() {
@@ -104,6 +142,24 @@ function populateTimeSelects(times) {
         option.value = time;
         option.textContent = UI.formatTimeToAmPm(time);
         toTimeSelect.appendChild(option);
+    });
+}
+
+function setupBookingModeToggle() {
+    const modeButtons = document.querySelectorAll('.booking-mode-btn');
+    modeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            // Update state
+            bookingState.bookingMode = mode;
+            bookingState.firstSelectedCreator = null;  // Reset
+            
+            // Update UI
+            modeButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            console.log(`✅ Booking mode changed to: ${mode}`);
+        });
     });
 }
 
@@ -398,27 +454,30 @@ async function lockDateAndTime() {
         namesArray = Array.isArray(namesArray) ? namesArray : [];
 
         // Check if current user is IN the list (list format: "Name - Role", e.g. "Deepak - Creator")
-        const currentName = (user.name || '').trim();
-        const currentNameLower = currentName.toLowerCase();
-        const isInList = currentName && namesArray.some(entry => {
-            const s = String(entry || '').trim();
-            const sLower = s.toLowerCase();
-            return sLower === currentNameLower ||
-                sLower.startsWith(currentNameLower + ' -') ||
-                sLower.startsWith(currentNameLower + ' ');
-        });
+        // SKIP conflict check if in "other" mode (admin booking for someone else)
+        if (bookingState.bookingMode === 'me') {
+            const currentName = (user.name || '').trim();
+            const currentNameLower = currentName.toLowerCase();
+            const isInList = currentName && namesArray.some(entry => {
+                const s = String(entry || '').trim();
+                const sLower = s.toLowerCase();
+                return sLower === currentNameLower ||
+                    sLower.startsWith(currentNameLower + ' -') ||
+                    sLower.startsWith(currentNameLower + ' ');
+            });
 
-        // If user is NOT in the list → show error and block
-        if (namesArray.length > 0 && !isInList) {
-            const msg = 'Your Already Booked for this slot.';
-            if (lockError) {
-                UI.showError(lockError, msg);
-                lockError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // If user is NOT in the list → show error and block
+            if (namesArray.length > 0 && !isInList) {
+                const msg = 'Your Already Booked for this slot.';
+                if (lockError) {
+                    UI.showError(lockError, msg);
+                    lockError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+                if (lockSuccess) lockSuccess.classList.remove('show');
+                UI.showToast(msg, 'warning', 5000);
+                alert(msg);
+                return;
             }
-            if (lockSuccess) lockSuccess.classList.remove('show');
-            UI.showToast(msg, 'warning', 5000);
-            alert(msg);
-            return;
         }
 
         // Handle cast list from webhook - use same name array for DOP/cast
@@ -613,6 +672,34 @@ function renderDopCheckboxes() {
     console.log('DOP checkboxes rendered successfully');
 }
 
+function updateFirstSelectedCreator() {
+    /**
+     * Find the first checked creator checkbox and update firstSelectedCreator
+     * Called whenever any checkbox state changes
+     */
+    if (bookingState.bookingMode !== 'other') return;
+    
+    const castCheckboxes = document.getElementById('castCheckboxes');
+    const checkboxes = castCheckboxes.querySelectorAll('input[type="checkbox"]');
+    
+    let firstCheckedCreator = null;
+    for (let checkbox of checkboxes) {
+        if (checkbox.checked) {
+            firstCheckedCreator = checkbox.value;
+            break;
+        }
+    }
+    
+    // Update state with just the name part
+    if (firstCheckedCreator) {
+        bookingState.firstSelectedCreator = extractCreatorName(firstCheckedCreator);
+        console.log('✅ Updated first selected creator:', bookingState.firstSelectedCreator);
+    } else {
+        bookingState.firstSelectedCreator = null;
+        console.log('ℹ️ All creators deselected');
+    }
+}
+
 function renderCastCheckboxes() {
     const castCheckboxes = document.getElementById('castCheckboxes');
     castCheckboxes.innerHTML = '';
@@ -654,6 +741,8 @@ function renderCastCheckboxes() {
                 bookingState.selectedCast.delete(checkbox.value);
                 console.log('Deselected from cast:', checkbox.value);
             }
+            // Update first selected creator (moves to next if current is deselected)
+            updateFirstSelectedCreator();
             clearConflict();  // Clear any conflict message when user changes selection
             updateSubmitButtonState();
         });
@@ -783,6 +872,17 @@ async function submitBooking() {
     submitBtn.disabled = true;
     UI.setLoading(submitLoading, true);
     try {
+        // Validate "other" mode - must have first selected creator
+        if (bookingState.bookingMode === 'other' && !bookingState.firstSelectedCreator) {
+            const msg = 'Please select at least one creator for booking.';
+            UI.showError(submitError, msg);
+            UI.showToast(msg, 'warning', 3000);
+            bookingSubmitInFlight = false;
+            submitBtn.disabled = false;
+            UI.setLoading(submitLoading, false);
+            return;
+        }
+
         // Get form data
         const shootName = document.getElementById('shootName').value.trim();
         const brand = document.getElementById('brand').value.trim();
@@ -793,15 +893,25 @@ async function submitBooking() {
         // Get user
         const user = AUTH.getCurrentUser();
 
+        // Prepare user object for payload - use firstSelectedCreator if in "other" mode
+        // Extract only name part (remove " - Creator" or " - DOP" suffix)
+        const userForPayload = bookingState.bookingMode === 'other' && bookingState.firstSelectedCreator
+            ? {
+                name: bookingState.firstSelectedCreator,
+                role: user.role,
+                email: user.email
+              }
+            : {
+                name: extractCreatorName(user.name),
+                role: user.role,
+                email: user.email
+              };
+
         // Prepare payload
         const payload = {
             action: 'booking_submit',
             command: '/slot_booking',
-            user: {
-                name: user.name,
-                role: user.role,
-                email: user.email
-            },
+            user: userForPayload,
             dateKey: bookingState.selectedDateKey,
             fromTime: bookingState.fromTime,
             toTime: bookingState.toTime,

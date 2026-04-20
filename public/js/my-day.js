@@ -1049,26 +1049,7 @@ function handleEditBookingClick(event) {
   try {
     const bookingData = JSON.parse(bookingDataStr);
     
-    // Check if shoot time has already passed
-    const shootDate = bookingData.date; // Format: "25 Feb 26"
-    const shootTime = bookingData.fromTime; // Format: "Sat Dec 30 1899 12:00:00 GMT+0521" or similar
-    
-    console.log("⏰ Checking shoot time - Date:", shootDate, "Time:", shootTime);
-    
-    // Parse shoot datetime
-    const shootDateTime = parseShootDateTime(shootDate, shootTime);
-    const now = new Date();
-    
-    console.log("⏰ Now:", now.toLocaleString());
-    console.log("⏰ Shoot datetime:", shootDateTime.toLocaleString());
-    
-    if (shootDateTime < now) {
-      console.log("🚫 Shoot time has passed!");
-      UI.showToast("Cannot edit booking - shoot time has already started", "error", 4000);
-      return;
-    }
-    
-    console.log("✅ Shoot time is in future - allowing edit");
+    console.log("✅ Edit booking allowed anytime");
     initiateEditBooking(bookingData);
   } catch (error) {
     console.error("Error parsing booking data:", error);
@@ -1411,6 +1392,7 @@ async function initiateEditBooking(bookingData) {
       bookingData: bookingData,
       originalDops: [],
       originalCast: [],
+      originalNoOfShoot: bookingData.noOfShoot || "1",
       selectedDops: new Set(),
       selectedCast: new Set(),
       availableDops: [],
@@ -1639,6 +1621,13 @@ function displayEditModal(editState) {
   castListContainer.innerHTML = castHtml;
   console.log("✅ Cast HTML set");
   
+  // Set No Of Shoot dropdown value
+  const noOfShootSelect = document.getElementById('noOfShootSelect');
+  if (noOfShootSelect) {
+    noOfShootSelect.value = editState.originalNoOfShoot || "1";
+    console.log("✅ No Of Shoot dropdown set to:", noOfShootSelect.value);
+  }
+  
   // Attach checkbox listeners
   attachEditCheckboxListeners();
 }
@@ -1723,6 +1712,14 @@ async function handleUpdateBookingClick() {
   try {
     const editState = window.editState;
     
+    // Get new No Of Shoot value from dropdown
+    const noOfShootSelect = document.getElementById('noOfShootSelect');
+    const newNoOfShoot = noOfShootSelect ? noOfShootSelect.value : editState.originalNoOfShoot;
+    
+    console.log("📊 No Of Shoot change:");
+    console.log("  Old:", editState.originalNoOfShoot);
+    console.log("  New:", newNoOfShoot);
+    
     // Calculate differences
     const removeUsers = [];
     const addUsers = [];
@@ -1753,15 +1750,18 @@ async function handleUpdateBookingClick() {
     
     console.log("📋 Team changes:", { removeUsers, addUsers });
     
+    // Check if No Of Shoot changed
+    const noOfShootChanged = String(newNoOfShoot) !== String(editState.originalNoOfShoot);
+    
     // If no changes, just close modal
-    if (removeUsers.length === 0 && addUsers.length === 0) {
+    if (removeUsers.length === 0 && addUsers.length === 0 && !noOfShootChanged) {
       UI.showToast("No changes made", "info", 2000);
       closeEditModal();
       return;
     }
     
     // Send second webhook with changes
-    await submitUpdatedBooking(editState.bookingData, editState, removeUsers, addUsers);
+    await submitUpdatedBooking(editState.bookingData, editState, removeUsers, addUsers, newNoOfShoot);
     
   } catch (error) {
     console.error("❌ Error updating booking:", error);
@@ -1772,7 +1772,7 @@ async function handleUpdateBookingClick() {
 /**
  * Submit updated booking to webhook
  */
-async function submitUpdatedBooking(bookingData, editState, removeUsers, addUsers) {
+async function submitUpdatedBooking(bookingData, editState, removeUsers, addUsers, newNoOfShoot) {
   try {
     const user = AUTH.getCurrentUser();
     
@@ -1789,6 +1789,8 @@ async function submitUpdatedBooking(bookingData, editState, removeUsers, addUser
     console.log("  🎥 New DOP:", newDop);
     console.log("  🎬 Old Cast:", oldCast);
     console.log("  🎬 New Cast:", newCast);
+    console.log("  📊 Old No Of Shoot:", editState.originalNoOfShoot);
+    console.log("  📊 New No Of Shoot:", newNoOfShoot);
     
     // Prepare second webhook payload
     const payload = {
@@ -1809,7 +1811,9 @@ async function submitUpdatedBooking(bookingData, editState, removeUsers, addUser
         newDop: newDop,
         oldCast: oldCast,
         newCast: newCast,
-        noOfShoot: bookingData.noOfShoot
+        oldNoOfShoot: editState.originalNoOfShoot,
+        newNoOfShoot: newNoOfShoot,
+        noOfShoot: newNoOfShoot
       },
       removeUsers: removeUsers,
       addUsers: addUsers,
