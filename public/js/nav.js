@@ -15,13 +15,15 @@ const NAV = {
             { name: 'Today Shoots', url: '/todays-shoots.html' },
             { name: 'Tomorrow Shoots', url: '/tomorrow-shoots.html' },
             { name: 'Live', url: '/live.html' },
-            { name: 'Employees', url: '/employees.html' }
+            { name: 'Employees', url: '/employees.html' },
+            { name: 'Slot Booking', url: '/booking.html' }
         ],
         Admin: [
             { name: 'Today Shoots', url: '/todays-shoots.html' },
             { name: 'Tomorrow Shoots', url: '/tomorrow-shoots.html' },
             { name: 'Live', url: '/live.html' },
-            { name: 'Employees', url: '/employees.html' }
+            { name: 'Employees', url: '/employees.html' },
+            { name: 'Slot Booking', url: '/booking.html' }
         ],
         creator: [
             { name: 'Slot Booking', url: '/booking.html' },
