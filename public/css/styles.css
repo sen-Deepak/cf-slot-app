@@ -2804,6 +2804,25 @@ input::placeholder {
     filter: brightness(1.2);
 }
 
+/* Search highlight / dim states */
+.event-block.search-highlight {
+    box-shadow: 0 0 0 2.5px #fff, 0 0 18px 4px var(--search-glow, #ffe066), 0 0 32px 8px var(--search-glow, #ffe066) !important;
+    filter: brightness(1.18) !important;
+    z-index: 50 !important;
+    animation: searchGlowPulse 1.4s ease-in-out infinite;
+}
+
+.event-block.search-dim {
+    opacity: 0.18 !important;
+    filter: grayscale(0.7) brightness(0.8) !important;
+}
+
+@keyframes searchGlowPulse {
+    0%   { box-shadow: 0 0 0 2.5px #fff, 0 0 18px 4px var(--search-glow, #ffe066), 0 0 32px 8px var(--search-glow, #ffe066); }
+    50%  { box-shadow: 0 0 0 2.5px #fff, 0 0 28px 10px var(--search-glow, #ffe066), 0 0 48px 16px var(--search-glow, #ffe066); }
+    100% { box-shadow: 0 0 0 2.5px #fff, 0 0 18px 4px var(--search-glow, #ffe066), 0 0 32px 8px var(--search-glow, #ffe066); }
+}
+
 /* Deleted Event Blocks */
 .event-block.deleted {
     background: #cc000026 !important;
@@ -4523,6 +4542,145 @@ input::placeholder {
     font-size: 1.1rem;
 }
 
+/* ========================================
+   LIVE PAGE – SEARCH BAR
+   ======================================== */
+
+.schedule-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem 0.5rem;
+}
+
+.schedule-header h2 {
+    margin: 0;
+    padding: 0;
+}
+
+.search-bar-wrapper {
+    position: relative;
+    width: 240px;
+    flex-shrink: 0;
+}
+
+.search-input-group {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: visible;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-input-group:focus-within {
+    border-color: #755bd4;
+    box-shadow: 0 0 0 3px rgba(117,91,212,0.15);
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 7px 10px;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+    min-width: 0;
+}
+
+.search-input::placeholder {
+    color: #bbb;
+}
+
+.search-clear-btn {
+    border: none;
+    background: transparent;
+    color: #999;
+    cursor: pointer;
+    padding: 0 10px 0 4px;
+    font-size: 13px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.search-clear-btn:hover {
+    color: #555;
+}
+
+.search-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1.5px solid #755bd4;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.13);
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    z-index: 200;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.search-dropdown li {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.search-dropdown li:hover,
+.search-dropdown li.active {
+    background: #f0ecfc;
+    color: #755bd4;
+}
+
+.search-dropdown li .dd-role {
+    font-size: 10px;
+    color: #aaa;
+    background: #f5f5f5;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
+
+.search-dropdown li:hover .dd-role {
+    background: #e4ddf8;
+    color: #755bd4;
+}
+
+.search-no-results {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #aaa;
+    text-align: center;
+}
+
+@media (max-width: 520px) {
+    .schedule-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .search-bar-wrapper {
+        width: 100%;
+    }
+}
+
 /* Section Styles */
 .section-shoots {
     margin-bottom: 2rem;
@@ -4531,7 +4689,8 @@ input::placeholder {
     padding: 0;
 }
 
-.section-shoots h2 {
+/* h2 now lives inside .schedule-header which handles its own padding */
+.section-shoots > h2 {
     padding-left: 1rem;
     padding-right: 1rem;
     padding-top: 1.5rem;
