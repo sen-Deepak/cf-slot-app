@@ -28,7 +28,16 @@
         <main class="main-content">
             <!-- Schedule Section -->
             <section class="section section-shoots">
-                <h2>Schedule</h2>
+                <div class="schedule-header">
+                    <h2>Schedule</h2>
+                    <div class="search-bar-wrapper">
+                        <div class="search-input-group">
+                            <input type="text" id="scheduleSearch" class="search-input" placeholder="Search by name…" autocomplete="off">
+                            <button id="searchClearBtn" class="search-clear-btn" title="Clear search" style="display:none">✕</button>
+                        </div>
+                        <ul id="searchDropdown" class="search-dropdown" style="display:none"></ul>
+                    </div>
+                </div>
                 <div id="shootsList" class="shoots-container">
                     <p>Loading shoots...</p>
                 </div>

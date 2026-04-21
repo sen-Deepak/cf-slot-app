@@ -8,6 +8,7 @@ import { NAV } from './nav.js';
 import { ADMIN_API } from './admin-api.js';
 
 let liveRefreshInterval = null;
+let allShoots = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     // Check auth first
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initializePage();
+    initSearch();
     loadLiveData();
 
     // Refresh live data every 30 seconds
@@ -58,6 +60,7 @@ async function loadLiveData() {
             return;
         }
 
+        allShoots = shoots;
         loadShootsSchedule(shoots);
     } catch (error) {
         console.error('Error loading schedule:', error);
@@ -308,11 +311,20 @@ function loadShootsSchedule(shoots) {
 
         const block = document.createElement('div');
         block.className = 'event-block';
-        
+
         // Add 'deleted' class if Final Status is "Deleted"
         if (shoot['Final Status'] === 'Deleted') {
             block.classList.add('deleted');
         }
+
+        // Build searchable names: creator, dop, cast members, brand/IP name, shoot name
+        const searchNames = [];
+        if (shoot['Creator']) searchNames.push(...shoot['Creator'].split(',').map(s => s.trim()).filter(Boolean));
+        if (shoot['DOP']) searchNames.push(...shoot['DOP'].split(',').map(s => s.trim()).filter(Boolean));
+        if (shoot['Cast']) searchNames.push(...shoot['Cast'].split(',').map(s => s.trim()).filter(Boolean));
+        if (shoot['B_IP_Name']) searchNames.push(shoot['B_IP_Name'].trim());
+        if (shoot['Shoot Name']) searchNames.push(shoot['Shoot Name'].trim());
+        block.dataset.searchNames = JSON.stringify(searchNames);
         
         block.style.cssText = `
             top: ${top}px;
@@ -352,6 +364,168 @@ function loadShootsSchedule(shoots) {
         currentTimeLine.appendChild(timeLabel);
         eventsContainer.appendChild(currentTimeLine);
     }
+}
+
+function initSearch() {
+    const input = document.getElementById('scheduleSearch');
+    const dropdown = document.getElementById('searchDropdown');
+    const clearBtn = document.getElementById('searchClearBtn');
+    if (!input) return;
+
+    input.addEventListener('input', () => {
+        const q = input.value.trim();
+        clearBtn.style.display = q ? '' : 'none';
+        if (!q) {
+            hideDropdown();
+            clearSearch();
+            return;
+        }
+        showSuggestions(q);
+    });
+
+    input.addEventListener('keydown', (e) => {
+        const items = dropdown.querySelectorAll('li[data-name]');
+        const active = dropdown.querySelector('li.active');
+        const idx = active ? [...items].indexOf(active) : -1;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const next = items[idx + 1] || items[0];
+            if (next) { active && active.classList.remove('active'); next.classList.add('active'); next.scrollIntoView({ block: 'nearest' }); }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prev = items[idx - 1] || items[items.length - 1];
+            if (prev) { active && active.classList.remove('active'); prev.classList.add('active'); prev.scrollIntoView({ block: 'nearest' }); }
+        } else if (e.key === 'Enter') {
+            if (active) { selectName(active.dataset.name); }
+        } else if (e.key === 'Escape') {
+            hideDropdown();
+            clearSearch();
+            input.value = '';
+            clearBtn.style.display = 'none';
+        }
+    });
+
+    clearBtn.addEventListener('click', () => {
+        input.value = '';
+        clearBtn.style.display = 'none';
+        hideDropdown();
+        clearSearch();
+        input.focus();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-bar-wrapper')) hideDropdown();
+    });
+}
+
+function collectAllNames() {
+    const seen = new Set();
+    const entries = []; // { name, role }
+
+    const add = (name, role) => {
+        if (!name) return;
+        const n = name.trim();
+        if (!n || seen.has(n.toLowerCase())) return;
+        seen.add(n.toLowerCase());
+        entries.push({ name: n, role });
+    };
+
+    allShoots.forEach(shoot => {
+        if (shoot['B_IP_Name']) add(shoot['B_IP_Name'], 'Brand');
+        if (shoot['Shoot Name']) add(shoot['Shoot Name'], 'Shoot');
+        if (shoot['Creator']) shoot['Creator'].split(',').forEach(s => add(s.trim(), 'Creator'));
+        if (shoot['DOP']) shoot['DOP'].split(',').forEach(s => add(s.trim(), 'DOP'));
+        if (shoot['Cast']) shoot['Cast'].split(',').forEach(s => add(s.trim(), 'Cast'));
+    });
+
+    return entries;
+}
+
+function showSuggestions(query) {
+    const dropdown = document.getElementById('searchDropdown');
+    if (!dropdown) return;
+
+    const q = query.toLowerCase();
+    const all = collectAllNames();
+    const matches = all.filter(e => e.name.toLowerCase().includes(q));
+
+    if (matches.length === 0) {
+        dropdown.innerHTML = `<li class="search-no-results">No matches</li>`;
+        dropdown.style.display = '';
+        return;
+    }
+
+    dropdown.innerHTML = matches.map(e =>
+        `<li data-name="${escapeHtml(e.name)}">
+            <span class="dd-name">${highlightMatch(e.name, query)}</span>
+            <span class="dd-role">${e.role}</span>
+        </li>`
+    ).join('');
+
+    dropdown.querySelectorAll('li[data-name]').forEach(li => {
+        li.addEventListener('mousedown', (ev) => {
+            ev.preventDefault();
+            selectName(li.dataset.name);
+        });
+    });
+
+    dropdown.style.display = '';
+}
+
+function hideDropdown() {
+    const dropdown = document.getElementById('searchDropdown');
+    if (dropdown) dropdown.style.display = 'none';
+}
+
+function selectName(name) {
+    const input = document.getElementById('scheduleSearch');
+    if (input) input.value = name;
+    hideDropdown();
+    applySearch(name);
+}
+
+function applySearch(name) {
+    const blocks = document.querySelectorAll('.event-block');
+    if (!name) { clearSearch(); return; }
+
+    const nameLower = name.toLowerCase();
+
+    blocks.forEach(block => {
+        const names = JSON.parse(block.dataset.searchNames || '[]');
+        const matched = names.some(n => n.toLowerCase() === nameLower);
+        block.classList.toggle('search-highlight', matched);
+        block.classList.toggle('search-dim', !matched);
+
+        if (matched) {
+            // Use the block's stripe color as glow color
+            const stripe = block.querySelector('.event-stripe');
+            if (stripe) {
+                const color = stripe.style.background || '#ffe066';
+                block.style.setProperty('--search-glow', color);
+            }
+        }
+    });
+}
+
+function clearSearch() {
+    document.querySelectorAll('.event-block').forEach(block => {
+        block.classList.remove('search-highlight', 'search-dim');
+        block.style.removeProperty('--search-glow');
+    });
+}
+
+function highlightMatch(name, query) {
+    if (!query) return escapeHtml(name);
+    const idx = name.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return escapeHtml(name);
+    return escapeHtml(name.slice(0, idx)) +
+        `<strong>${escapeHtml(name.slice(idx, idx + query.length))}</strong>` +
+        escapeHtml(name.slice(idx + query.length));
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function openShootModal(shoot, color) {
