@@ -4704,3 +4704,59 @@ input::placeholder {
     padding: 0;
     max-width: 100%;
 }
+/* ── Live page: day selector tabs ─────────────────────────────────────────── */
+.day-tabs-wrapper {
+    padding: 0.75rem 1rem 0;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.day-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid #e8e8e8;
+    padding-bottom: 0;
+}
+
+.day-tab-btn {
+    flex: 1;
+    padding: 8px 0 10px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.18s, border-color 0.18s;
+    border-radius: 0;
+}
+
+.day-tab-btn:hover {
+    color: #555;
+}
+
+.day-tab-btn.active {
+    color: #755bd4;
+    border-bottom-color: #755bd4;
+}
+
+/* ── Version watermark ─────────────────────────────────────────────────────── */
+#app-version-badge {
+    position: fixed;
+    bottom: 12px;
+    left: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: monospace;
+    letter-spacing: 0.04em;
+    color: #7c5cbf;
+    background: rgba(117, 91, 212, 0.1);
+    border: 1px solid rgba(117, 91, 212, 0.25);
+    padding: 3px 8px;
+    border-radius: 20px;
+    pointer-events: none;
+    z-index: 9999;
+    user-select: none;
+}

@@ -1,37 +1,21 @@
 /**
- * version.js - Version and update info displayy
+ * version.js — App version watermark
+ * Change APP_VERSION before every push so you can confirm users loaded the new build.
  */
 
-const VERSION_INFO = {
-    async load() {
-        try {
-            const response = await fetch('/version.json');
-            return response.json();
-        } catch (error) {
-            console.warn('Failed to load version info:', error);
-            return null;
-        }
-    },
+const APP_VERSION = 'V-1.1';
 
-    async displayInFooter(containerId) {
-        const versionData = await this.load();
-        if (!versionData) return;
+function injectVersionBadge() {
+    const badge = document.createElement('div');
+    badge.id = 'app-version-badge';
+    badge.textContent = APP_VERSION;
+    document.body.appendChild(badge);
+}
 
-        const container = document.getElementById(containerId);
-        if (!container) return;
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectVersionBadge);
+} else {
+    injectVersionBadge();
+}
 
-        const html = `
-            <div class="version-info">
-                <small>v${versionData.version} • ${versionData.lastUpdate}</small>
-            </div>
-        `;
-
-        container.innerHTML = html;
-    },
-
-    async getVersion() {
-        return await this.load();
-    }
-};
-
-export { VERSION_INFO };
+export { APP_VERSION };

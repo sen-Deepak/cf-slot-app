@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header: top row = logo + logout, bottom row = page tabs -->
         <header class="header">
             <div class="header-top-row">
                 <a href="/live.html" class="header-logo-link">
@@ -24,12 +23,20 @@
             </nav>
         </header>
 
-        <!-- Main content -->
         <main class="main-content">
-            <!-- Schedule Section -->
             <section class="section section-shoots">
+
+                <!-- Day selector -->
+                <div class="day-tabs-wrapper">
+                    <div class="day-tabs">
+                        <button class="day-tab-btn active" data-tab="today">Today</button>
+                        <button class="day-tab-btn" data-tab="tomorrow">Tomorrow</button>
+                        <button class="day-tab-btn" data-tab="dayafter">Day After</button>
+                    </div>
+                </div>
+
+                <!-- Search bar (shared, works on active tab) -->
                 <div class="schedule-header">
-                    <h2>Schedule</h2>
                     <div class="search-bar-wrapper">
                         <div class="search-input-group">
                             <input type="text" id="scheduleSearch" class="search-input" placeholder="Search by name…" autocomplete="off">
@@ -38,16 +45,35 @@
                         <ul id="searchDropdown" class="search-dropdown" style="display:none"></ul>
                     </div>
                 </div>
-                <div id="shootsList" class="shoots-container">
-                    <p>Loading shoots...</p>
+
+                <!-- Today panel -->
+                <div id="panel-today" class="day-tab-panel">
+                    <div id="shootsListToday" class="shoots-container">
+                        <p>Loading shoots...</p>
+                    </div>
                 </div>
+
+                <!-- Tomorrow panel -->
+                <div id="panel-tomorrow" class="day-tab-panel" style="display:none">
+                    <div id="shootsListTomorrow" class="shoots-container">
+                        <p>Loading shoots...</p>
+                    </div>
+                </div>
+
+                <!-- Day After panel -->
+                <div id="panel-dayafter" class="day-tab-panel" style="display:none">
+                    <div id="shootsListDayafter" class="shoots-container">
+                        <p>Loading shoots...</p>
+                    </div>
+                </div>
+
             </section>
         </main>
     </div>
 
-    <!-- Scripts -->
     <script type="module" src="/js/auth.js"></script>
     <script type="module" src="/js/nav.js"></script>
     <script type="module" src="/js/live.js"></script>
+    <script type="module" src="/js/version.js"></script>
 </body>
 </html>
