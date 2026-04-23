@@ -8,7 +8,7 @@ const NAV = {
      * Page configuration based on user role
      * Admin pages: Today's Shoots, Tomorrow Shoots, Live, Employees
      * Creator/DOP pages: Slot Booking, Pre/Post, Live, Slot Check, My Day, Attendance
-     * Other pages: Slot Booking, Pre/Post, Slot Check, My Day, Attendance
+     * Other pages: Slot Booking, Pre/Post, Live, Slot Check, My Day, Attendance
      */
     pages: {
         admin: [
@@ -60,6 +60,7 @@ const NAV = {
         nonAdmin: [
             { name: 'Slot Booking', url: '/booking.html' },
             { name: 'Pre/Post', url: '/prepost.html' },
+            { name: 'Live', url: '/live.html' },
             { name: 'Slot Check', url: '/slot-check.html' },
             { name: 'My Day', url: '/my-day.html' },
             { name: 'Attendance', url: '/attendance.html' }
